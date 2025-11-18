@@ -72,6 +72,7 @@ Status runCycles(uint64_t cycles) {
         pipelineInfo.memInst = simulator->simMEM(pipelineInfo.exInst);
         pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
         pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
+        PC = pipelineInfo.idInst.nextPC;
         pipelineInfo.ifInst = simulator->simIF(PC);
 
         // WB Check for halt instruction
