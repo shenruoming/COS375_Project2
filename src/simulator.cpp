@@ -435,23 +435,31 @@ Simulator::Instruction Simulator::simCommit(Instruction inst, REGS &regData) {
 // You may find it useful to call functional simulation functions above
 
 Simulator::Instruction Simulator::simIF(uint64_t PC) {
-    throw std::runtime_error("simIF not implemented yet"); // TODO implement IF 
+    // throw std::runtime_error("simIF not implemented yet"); // TODO implement IF
+    return simFetch(PC, memory); 
 }
 
 Simulator::Instruction Simulator::simID(Simulator::Instruction inst) {
-    throw std::runtime_error("simID not implemented yet"); // TODO implement ID
+    // throw std::runtime_error("simID not implemented yet"); // TODO implement ID
+    inst = simDecode(inst);
+    inst = simOperandCollection(inst, regData);
+    return simNextPCResolution(inst);
 }
 
 Simulator::Instruction Simulator::simEX(Simulator::Instruction inst) {
-    throw std::runtime_error("simEX not implemented yet"); // TODO implement EX
+    // throw std::runtime_error("simEX not implemented yet"); // TODO implement EX
+    inst = simArithLogic(inst);
+    return simAddrGen(inst);
 }
 
 Simulator::Instruction Simulator::simMEM(Simulator::Instruction inst) {
-    throw std::runtime_error("simMEM not implemented yet"); // TODO implement MEM
+    // throw std::runtime_error("simMEM not implemented yet"); // TODO implement MEM
+    return simMemAccess(inst, memory);
 }
 
 Simulator::Instruction Simulator::simWB(Simulator::Instruction inst) {
-    throw std::runtime_error("simWB not implemented yet"); // TODO implement WB
+    // throw std::runtime_error("simWB not implemented yet"); // TODO implement WB
+    return simCommit(inst, regData);
 }
 
 
