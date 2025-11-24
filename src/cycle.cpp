@@ -66,15 +66,70 @@ Status runCycles(uint64_t cycles) {
         pipeState.cycle = cycleCount;
         count++;
         cycleCount++;
-    
+ 
         pipelineInfo.wbInst = nop(BUBBLE);
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
-        pipelineInfo.memInst = simulator->simMEM(pipelineInfo.exInst);
-        pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
-        pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
-        PC = pipelineInfo.idInst.nextPC;
-        pipelineInfo.ifInst = simulator->simIF(PC);
 
+        // forward to rs2 of load if needed: no stall for load-store (WB-> MEM)
+        if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.exInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.exInst.rs2) {
+            pipelineInfo.exInst.op2Val = pipelineInfo.wbInst.memResult;
+        }
+        pipelineInfo.memInst = simulator->simMEM(pipelineInfo.exInst);
+        
+        
+        // applies to load-use with stalling
+        // load-use for R-type (load first, then use as an input register)
+        if (pipelineInfo.memInst.opcode == OP_LOAD && (pipelineInfo.idInst.opcode != OP_STORE) &&
+            pipelineInfo.idInst.rs1 == pipelineInfo.memInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.memInst.rd) {
+            pipelineInfo.ifInst = pipelineInfo.ifInst;
+            pipelineInfo.idInst = pipelineInfo.idInst;
+            pipelineInfo.exInst = nop(BUBBLE);
+        // load-use for store (rs1 is in conflict) if we are storing at a register we just loaded the value of.
+        } else if (pipelineInfo.memInst.opcode == OP_LOAD && pipelineInfo.idInst.opcode == OP_STORE &&
+            pipelineInfo.idInst.rs1 == pipelineInfo.memInst.rd) {
+            pipelineInfo.ifInst = pipelineInfo.ifInst;
+            pipelineInfo.idInst = pipelineInfo.idInst;
+            pipelineInfo.exInst = nop(BUBBLE);
+        } else {
+            // NOP in between load and store, 
+            if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.idInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
+                pipelineInfo.idInst.op1Val = pipelinInfo.wbInst.memResult;
+            }
+            // also update dest reg of store if dependent on load
+            if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.idInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
+                pipelineInfo.idInst.op2Val = pipelinInfo.wbInst.memResult;
+            }
+            // MAKE SURE HERE THAT WB INSTR OR MEM INSTR ISNT A BRANCH 
+            // checking if register we need for execute was just calculated add -> smth -> add
+            if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
+                pipelineInfo.idInst.op1Val = pipelinInfo.wbInst.arithResult;
+            }
+            if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
+                pipelineInfo.idInst.op2Val = pipelinInfo.wbInst.arithResult;
+            }
+            // R-type -> R-type, store, and load hopefully
+            // checking if register we need for execute was just calculated add -> add
+            if (pipelineInfo.memInst.rd == pipelineInfo.idInst.rs1) {
+                pipelineInfo.idInst.op1Val = pipelinInfo.memInst.arithResult;
+            }
+            if (pipelineInfo.memInst.rd == pipelineInfo.idInst.rs2) {
+                pipelineInfo.idInst.op2Val = pipelinInfo.memInst.arithResult;
+            }
+
+            pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
+            // // if we are storing a register that we just loaded to (no stall)
+            // if (pipelineInfo.memInst.opcode == OP_LOAD && pipelineInfo.exInst.opcode == OP_STORE && pipelineInfo.memInst.rd == pipelineInfo.exInst.rs2) {
+            //     pipelineInfo.exInst.op2Val = pipelineInfo.memInst.memResult;
+            // }
+    
+            pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
+            
+            PC = pipelineInfo.idInst.nextPC;
+            pipelineInfo.ifInst = simulator->simIF(PC);
+        }
+        
+        
+        // later add goes into execute and stays there until value is available
         // WB Check for halt instruction
         if (pipelineInfo.wbInst.isHalt) {
             status = HALT;
