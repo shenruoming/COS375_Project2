@@ -70,26 +70,22 @@ Status runCycles(uint64_t cycles) {
  
         pipelineInfo.wbInst = nop(BUBBLE);
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
-        std::cout << "done with WB: "  << PC << std::endl;
         // forward to rs2 of load if needed: no stall for load-store (WB-> MEM)
         if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.exInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.exInst.rs2) {
             pipelineInfo.exInst.op2Val = pipelineInfo.wbInst.memResult;
         }
         pipelineInfo.memInst = simulator->simMEM(pipelineInfo.exInst);
-        std::cout << "done with MEM: "  << PC << std::endl;
         
         // applies to load-use with stalling
         // load-use for R-type (load first, then use as an input register)
         if (pipelineInfo.memInst.opcode == OP_LOAD && (pipelineInfo.idInst.opcode != OP_STORE) &&
             (pipelineInfo.idInst.rs1 == pipelineInfo.memInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.memInst.rd)) {
-            std::cout << "should not or be here "  << PC << std::endl;
             pipelineInfo.ifInst = pipelineInfo.ifInst;
             pipelineInfo.idInst = pipelineInfo.idInst;
             pipelineInfo.exInst = nop(BUBBLE);
         // load-use for store (rs1 is in conflict) if we are storing at a register we just loaded the value of.
         } else if (pipelineInfo.memInst.opcode == OP_LOAD && pipelineInfo.idInst.opcode == OP_STORE &&
             pipelineInfo.idInst.rs1 == pipelineInfo.memInst.rd) {
-            std::cout << "should not be here "  << PC << std::endl;
             pipelineInfo.ifInst = pipelineInfo.ifInst;
             pipelineInfo.idInst = pipelineInfo.idInst;
             pipelineInfo.exInst = nop(BUBBLE);
@@ -106,17 +102,21 @@ Status runCycles(uint64_t cycles) {
             // MAKE SURE HERE THAT WB INSTR OR MEM INSTR ISNT A BRANCH 
             // checking if register we need for execute was just calculated add -> smth -> add
             if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
+                std::cout << "forward from wb to ex for rs1: "  << PC << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.arithResult;
             }
             if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
+                std::cout << "forward from wb to ex for rs2: "  << PC << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.arithResult;
             }
             // R-type -> R-type, store, and load hopefully
             // checking if register we need for execute was just calculated add -> add
             if (pipelineInfo.memInst.rd == pipelineInfo.idInst.rs1) {
+                std::cout << "forward from mem to ex for rs1: "  << PC << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.memInst.arithResult;
             }
             if (pipelineInfo.memInst.rd == pipelineInfo.idInst.rs2) {
+                std::cout << "forward from mem to ex for rs2: "  << PC << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.memInst.arithResult;
             }
 

@@ -436,7 +436,7 @@ Simulator::Instruction Simulator::simCommit(Instruction inst, REGS &regData) {
 
 Simulator::Instruction Simulator::simIF(uint64_t PC) {
     // throw std::runtime_error("simIF not implemented yet"); // TODO implement IF
-    cout << "[Simulator] reached fetch: " << endl;
+    // cout << "[Simulator] reached fetch: " << endl;
     return simFetch(PC, memory); 
 }
 
@@ -444,26 +444,26 @@ Simulator::Instruction Simulator::simID(Simulator::Instruction inst) {
     // throw std::runtime_error("simID not implemented yet"); // TODO implement ID
     inst = simDecode(inst);
     inst = simOperandCollection(inst, regData);
-    cout << "[Simulator] reached decode: " << endl;
+    // cout << "[Simulator] reached decode: " << endl;
     return simNextPCResolution(inst);
 }
 
 Simulator::Instruction Simulator::simEX(Simulator::Instruction inst) {
     // throw std::runtime_error("simEX not implemented yet"); // TODO implement EX
     inst = simArithLogic(inst);
-    cout << "[Simulator] reached execute: " << endl;
+    // cout << "[Simulator] reached execute: " << endl;
     return simAddrGen(inst);
 }
 
 Simulator::Instruction Simulator::simMEM(Simulator::Instruction inst) {
     // throw std::runtime_error("simMEM not implemented yet"); // TODO implement MEM
-    cout << "[Simulator] reached mem: " << endl;
+    // cout << "[Simulator] reached mem: " << endl;
     return simMemAccess(inst, memory);
 }
 
 Simulator::Instruction Simulator::simWB(Simulator::Instruction inst) {
     // throw std::runtime_error("simWB not implemented yet"); // TODO implement WB
-    cout << "[Simulator] reached writeback: "  << inst.instruction << endl;
+    // cout << "[Simulator] reached writeback: "  << inst.instruction << endl;
     return simCommit(inst, regData);
 }
 
