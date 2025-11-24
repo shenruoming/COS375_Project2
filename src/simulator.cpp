@@ -461,12 +461,18 @@ Simulator::Instruction Simulator::simEX(Simulator::Instruction inst) {
 Simulator::Instruction Simulator::simMEM(Simulator::Instruction inst) {
     // throw std::runtime_error("simMEM not implemented yet"); // TODO implement MEM
     // cout << "[Simulator] reached mem: " << endl;
+    if (inst.isHalt || !inst.isLegal) {
+        return inst;
+    }
     return simMemAccess(inst, memory);
 }
 
 Simulator::Instruction Simulator::simWB(Simulator::Instruction inst) {
     // throw std::runtime_error("simWB not implemented yet"); // TODO implement WB
     // cout << "[Simulator] reached writeback: "  << inst.instruction << endl;
+    if (inst.isHalt || !inst.isLegal) {
+        return inst;
+    }
     return simCommit(inst, regData);
 }
 
