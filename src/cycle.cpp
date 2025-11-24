@@ -81,7 +81,7 @@ Status runCycles(uint64_t cycles) {
         // applies to load-use with stalling
         // load-use for R-type (load first, then use as an input register)
         if (pipelineInfo.memInst.opcode == OP_LOAD && (pipelineInfo.idInst.opcode != OP_STORE) &&
-            pipelineInfo.idInst.rs1 == pipelineInfo.memInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.memInst.rd) {
+            (pipelineInfo.idInst.rs1 == pipelineInfo.memInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.memInst.rd)) {
             std::cout << "should not or be here "  << PC << std::endl;
             pipelineInfo.ifInst = pipelineInfo.ifInst;
             pipelineInfo.idInst = pipelineInfo.idInst;
