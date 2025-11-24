@@ -18,5 +18,5 @@ add  t4, t2, t3
 add t4, t4, t4
 ld t5, 216(t4)
 sd t5, 219(t1)
-sd t5, 130(t5)
+sd t5, 130(t1)
 .word 0xfeedfeed
