@@ -93,13 +93,14 @@ Status runCycles(uint64_t cycles) {
             pipelineInfo.idInst = pipelineInfo.idInst;
             pipelineInfo.exInst = nop(BUBBLE);
         } else {
-            std::cout << "should be here: "  << PC << std::endl;
             // NOP in between load and store, 
             if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.idInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
+                std::cout << "forwarding from WB to ID before executing ID for rs1 (load->store): "  << PC << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.memResult;
             }
             // also update dest reg of store if dependent on load
             if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.idInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
+                std::cout << "forwarding from WB to ID before executing ID for rs2 (load->store): "  << PC << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.memResult;
             }
             // MAKE SURE HERE THAT WB INSTR OR MEM INSTR ISNT A BRANCH 
