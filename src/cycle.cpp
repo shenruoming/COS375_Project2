@@ -94,12 +94,16 @@ Status runCycles(uint64_t cycles) {
             pipelineInfo.exInst = nop(BUBBLE);
         } else {
             // NOP in between load and store, 
-            if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.idInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
+            if (pipelineInfo.wbInst.opcode == OP_LOAD 
+                && pipelineInfo.idInst.opcode == OP_STORE 
+                && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
                 std::cout << "forwarding from WB to ID before executing ID for rs1 (load->store): "  << PC << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.memResult;
             }
             // also update dest reg of store if dependent on load
-            if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.idInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
+            if (pipelineInfo.wbInst.opcode == OP_LOAD 
+                && pipelineInfo.idInst.opcode == OP_STORE 
+                && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
                 std::cout << "forwarding from WB to ID before executing ID for rs2 (load->store): "  << PC << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.memResult;
             }
@@ -116,15 +120,12 @@ Status runCycles(uint64_t cycles) {
             }
             // R-type -> R-type, store, and load hopefully
             // checking if register we need for execute was just calculated add -> add
-            if (pipelineInfo.memInst.rd == pipelineInfo.idInst.rs1) {
+            if (pipelineInfo.memInst.opcode != OP_LOAD && pipelineInfo.memInst.rd == pipelineInfo.idInst.rs1) {
                 std::cout << "forward from mem to ex for rs1: "  << pipelineInfo.memInst.arithResult << std::endl;
-                // std::cout << "should be here at t4 for t2: "  << pipelineInfo.memInst.arithResult << std::endl;
-                // std::cout << "should be here at t4 for t4 for rs1: "  << pipelineInfo.memInst.arithResult << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.memInst.arithResult;
             }
-            if (pipelineInfo.memInst.rd == pipelineInfo.idInst.rs2) {
+            if (pipelineInfo.memInst.opcode != OP_LOAD && pipelineInfo.memInst.rd == pipelineInfo.idInst.rs2) {
                 std::cout << "forward from mem to ex for rs2: "  << pipelineInfo.memInst.arithResult << std::endl;
-                // std::cout << "should be here at t4 for t4: "  << pipelineInfo.memInst.arithResult << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.memInst.arithResult;
             }
 
