@@ -93,27 +93,27 @@ Status runCycles(uint64_t cycles) {
         } else {
             // NOP in between load and store, 
             if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.idInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
-                pipelineInfo.idInst.op1Val = pipelinInfo.wbInst.memResult;
+                pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.memResult;
             }
             // also update dest reg of store if dependent on load
             if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.idInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
-                pipelineInfo.idInst.op2Val = pipelinInfo.wbInst.memResult;
+                pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.memResult;
             }
             // MAKE SURE HERE THAT WB INSTR OR MEM INSTR ISNT A BRANCH 
             // checking if register we need for execute was just calculated add -> smth -> add
             if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
-                pipelineInfo.idInst.op1Val = pipelinInfo.wbInst.arithResult;
+                pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.arithResult;
             }
             if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
-                pipelineInfo.idInst.op2Val = pipelinInfo.wbInst.arithResult;
+                pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.arithResult;
             }
             // R-type -> R-type, store, and load hopefully
             // checking if register we need for execute was just calculated add -> add
             if (pipelineInfo.memInst.rd == pipelineInfo.idInst.rs1) {
-                pipelineInfo.idInst.op1Val = pipelinInfo.memInst.arithResult;
+                pipelineInfo.idInst.op1Val = pipelineInfo.memInst.arithResult;
             }
             if (pipelineInfo.memInst.rd == pipelineInfo.idInst.rs2) {
-                pipelineInfo.idInst.op2Val = pipelinInfo.memInst.arithResult;
+                pipelineInfo.idInst.op2Val = pipelineInfo.memInst.arithResult;
             }
 
             pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
