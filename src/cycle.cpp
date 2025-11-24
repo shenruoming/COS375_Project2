@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <stdio.h>
 
 #include "Utilities.h"
 #include "cache.h"
