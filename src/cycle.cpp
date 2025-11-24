@@ -69,6 +69,7 @@ Status runCycles(uint64_t cycles) {
         cycleCount++;
  
         pipelineInfo.wbInst = nop(BUBBLE);
+        std::cout << "should be 24 "  << pipelineInfo.memInst.arithResult << std::endl;
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
         // forward to rs2 of load if needed: no stall for load-store (WB-> MEM)
         if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.exInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.exInst.rs2) {
@@ -76,6 +77,7 @@ Status runCycles(uint64_t cycles) {
             pipelineInfo.exInst.op2Val = pipelineInfo.wbInst.memResult;
         }
         pipelineInfo.memInst = simulator->simMEM(pipelineInfo.exInst);
+
         
         // applies to load-use with stalling
         // load-use for R-type (load first, then use as an input register)
