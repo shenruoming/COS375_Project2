@@ -137,7 +137,7 @@ Status runCycles(uint64_t cycles) {
 
             uint64_t nextPC = pipelineInfo.idInst.nextPC;
             pipelineInfo.ifInst = simulator->simIF(PC);
-            PC = nextPC;
+            PC = PC + 4;
         }
         
         
