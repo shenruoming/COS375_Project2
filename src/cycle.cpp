@@ -135,12 +135,9 @@ Status runCycles(uint64_t cycles) {
             
             std::cout << "next pc: "  << PC << std::endl;
 
-            if (cycles == 0) {
-                PC = 4;
-            } else {
-                PC = pipelineInfo.idInst.nextPC;
-            }
+            uint64_t nextPC = pipelineInfo.idInst.nextPC;
             pipelineInfo.ifInst = simulator->simIF(PC);
+            PC = nextPC;
         }
         
         
