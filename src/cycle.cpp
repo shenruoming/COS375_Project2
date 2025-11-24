@@ -128,9 +128,10 @@ Status runCycles(uint64_t cycles) {
     
             pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
             
-            PC = pipelineInfo.idInst.nextPC;
             std::cout << "next pc: "  << PC << std::endl;
             pipelineInfo.ifInst = simulator->simIF(PC);
+
+            PC = pipelineInfo.idInst.nextPC;
         }
         
         
