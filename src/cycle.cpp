@@ -15,7 +15,7 @@ static Cache* dCache = nullptr;
 static std::string output;
 static uint64_t cycleCount = 0;
 
-static uint64_t PC = 0;
+static uint64_t PC = -4;
 
 /**TODO: Implement pipeline simulation for the RISCV machine in this file.
  * A basic template is provided below that doesn't account for any hazards.
@@ -133,10 +133,10 @@ Status runCycles(uint64_t cycles) {
     
             pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
             
-            // std::cout << "next pc: "  << PC << std::endl;
-            pipelineInfo.ifInst = simulator->simIF(PC);
+            std::cout << "next pc: "  << PC << std::endl;
 
             PC = pipelineInfo.idInst.nextPC;
+            pipelineInfo.ifInst = simulator->simIF(PC);
         }
         
         
