@@ -102,21 +102,25 @@ Status runCycles(uint64_t cycles) {
             // MAKE SURE HERE THAT WB INSTR OR MEM INSTR ISNT A BRANCH 
             // checking if register we need for execute was just calculated add -> smth -> add
             if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
-                std::cout << "forward from wb to ex for rs1: "  << PC << std::endl;
+                std::cout << "forward from wb to ex for rs1: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.arithResult;
             }
             if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
-                std::cout << "forward from wb to ex for rs2: "  << PC << std::endl;
+                std::cout << "forward from wb to ex for rs2: "  << pipelineInfo.wbInst.arithResult << std::endl;
+                std::cout << "should be here at t4 for t3: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.arithResult;
             }
             // R-type -> R-type, store, and load hopefully
             // checking if register we need for execute was just calculated add -> add
             if (pipelineInfo.memInst.rd == pipelineInfo.idInst.rs1) {
-                std::cout << "forward from mem to ex for rs1: "  << PC << std::endl;
+                std::cout << "forward from mem to ex for rs1: "  << pipelineInfo.memInst.arithResult << std::endl;
+                std::cout << "should be here at t4 for t2: "  << pipelineInfo.wbInst.arithResult << std::endl;
+                std::cout << "should be here at t4 for t4 for rs1: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.memInst.arithResult;
             }
             if (pipelineInfo.memInst.rd == pipelineInfo.idInst.rs2) {
-                std::cout << "forward from mem to ex for rs2: "  << PC << std::endl;
+                std::cout << "forward from mem to ex for rs2: "  << pipelineInfo.memInst.arithResult << std::endl;
+                std::cout << "should be here at t4 for t4: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.memInst.arithResult;
             }
 
