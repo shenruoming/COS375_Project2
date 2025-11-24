@@ -105,11 +105,11 @@ Status runCycles(uint64_t cycles) {
             }
             // MAKE SURE HERE THAT WB INSTR OR MEM INSTR ISNT A BRANCH 
             // checking if register we need for execute was just calculated add -> smth -> add
-            if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
+            if (pipelineInfo.wbInst.opcode != OP_LOAD && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
                 std::cout << "forward from wb to ex for rs1: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.arithResult;
             }
-            if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
+            if (pipelineInfo.wbInst.opcode != OP_LOAD && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
                 std::cout << "forward from wb to ex for rs2: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 // std::cout << "should be here at t4 for t3: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.arithResult;

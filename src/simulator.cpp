@@ -426,10 +426,7 @@ Simulator::Instruction Simulator::simCommit(Instruction inst, REGS &regData) {
     if (inst.readsMem) {
         regData.registers[inst.rd] = inst.memResult;
     } else {
-        
         regData.registers[inst.rd] = inst.arithResult;
-        cout << "what is stored " << regData.registers[inst.rd] << endl;
-        cout << "inst.rd " << inst.rd << endl;
     }
     return inst;
 }
