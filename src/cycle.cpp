@@ -107,20 +107,20 @@ Status runCycles(uint64_t cycles) {
             }
             if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
                 std::cout << "forward from wb to ex for rs2: "  << pipelineInfo.wbInst.arithResult << std::endl;
-                std::cout << "should be here at t4 for t3: "  << pipelineInfo.wbInst.arithResult << std::endl;
+                // std::cout << "should be here at t4 for t3: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.arithResult;
             }
             // R-type -> R-type, store, and load hopefully
             // checking if register we need for execute was just calculated add -> add
             if (pipelineInfo.memInst.rd == pipelineInfo.idInst.rs1) {
                 std::cout << "forward from mem to ex for rs1: "  << pipelineInfo.memInst.arithResult << std::endl;
-                std::cout << "should be here at t4 for t2: "  << pipelineInfo.wbInst.arithResult << std::endl;
-                std::cout << "should be here at t4 for t4 for rs1: "  << pipelineInfo.wbInst.arithResult << std::endl;
+                // std::cout << "should be here at t4 for t2: "  << pipelineInfo.memInst.arithResult << std::endl;
+                // std::cout << "should be here at t4 for t4 for rs1: "  << pipelineInfo.memInst.arithResult << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.memInst.arithResult;
             }
             if (pipelineInfo.memInst.rd == pipelineInfo.idInst.rs2) {
                 std::cout << "forward from mem to ex for rs2: "  << pipelineInfo.memInst.arithResult << std::endl;
-                std::cout << "should be here at t4 for t4: "  << pipelineInfo.wbInst.arithResult << std::endl;
+                // std::cout << "should be here at t4 for t4: "  << pipelineInfo.memInst.arithResult << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.memInst.arithResult;
             }
 
@@ -129,10 +129,11 @@ Status runCycles(uint64_t cycles) {
             // if (pipelineInfo.memInst.opcode == OP_LOAD && pipelineInfo.exInst.opcode == OP_STORE && pipelineInfo.memInst.rd == pipelineInfo.exInst.rs2) {
             //     pipelineInfo.exInst.op2Val = pipelineInfo.memInst.memResult;
             // }
+            std::cout << "result of ex: "  << pipelineInfo.exInst.arithResult << std::endl;
     
             pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
             
-            std::cout << "next pc: "  << PC << std::endl;
+            // std::cout << "next pc: "  << PC << std::endl;
             pipelineInfo.ifInst = simulator->simIF(PC);
 
             PC = pipelineInfo.idInst.nextPC;
