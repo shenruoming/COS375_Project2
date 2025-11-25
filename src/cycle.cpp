@@ -79,7 +79,7 @@ Status runCycles(uint64_t cycles) {
         
         // applies to load-use with stalling
         // load-use for R-type (load first, then use as an input register)
-        if (pipelineInfo.memInst.opcode == OP_LOAD && (pipelineInfo.idInst.opcode != OP_STORE) &&
+        if (pipelineInfo.memInst.opcode == OP_LOAD && (pipelineInfo.idInst.opcode != OP_STORE) && pipelineInfo.idInst.opcode != OP_BRANCH &&
             (pipelineInfo.idInst.rs1 == pipelineInfo.memInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.memInst.rd)) {
             pipelineInfo.ifInst = pipelineInfo.ifInst;
             pipelineInfo.idInst = pipelineInfo.idInst;
@@ -158,7 +158,7 @@ Status runCycles(uint64_t cycles) {
                 std::cout << "forward from mem to ex for rs2: "  << pipelineInfo.memInst.arithResult << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.memInst.arithResult;
             }
-
+            // one cycle arith branch stal
             if (pipelineInfo.idInst.opcode == OP_BRANCH 
                 && (pipelineInfo.exInst.opcode == OP_INT || pipelineInfo.exInst.opcode == OP_INTIMM 
                     || pipelineInfo.exInst.opcode == OP_INTIMMW || pipelineInfo.exInst.opcode == OP_INTW || pipelineInfo.exInst.opcode == OP_AUIPC)
@@ -172,7 +172,31 @@ Status runCycles(uint64_t cycles) {
                 }
                 pipelineInfo.exInst = nop(BUBBLE);
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
-                // pipelineInfo.ifInst.status = SPECULATIVE;
+            // two cycle load branch stall
+            } else if (pipelineInfo.idInst.opcode == OP_BRANCH 
+                && (pipelineInfo.exInst.opcode == OP_LOAD)
+                && (pipelineInfo.idInst.rs1 == pipelineInfo.exInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.exInst.rd)) {
+                if (pipelineInfo.idInst.rs1 == pipelineInfo.exInst.rd) {
+                    pipelineInfo.idInst.op1Val = pipelineInfo.exInst.arithResult;
+                }
+                if (pipelineInfo.idInst.rs2 == pipelineInfo.exInst.rd) {
+                    pipelineInfo.idInst.op2Val = pipelineInfo.exInst.arithResult;
+                }
+                pipelineInfo.exInst = nop(BUBBLE);
+                // pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
+            } else if (pipelineInfo.idInst.opcode == OP_BRANCH 
+                && (pipelineInfo.wbInst.opcode == OP_LOAD)
+                && (pipelineInfo.idInst.rs1 == pipelineInfo.wbInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.wbInst.rd)) {
+
+                if (pipelineInfo.idInst.rs1 == pipelineInfo.wbInst.rd) {
+                    pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.arithResult;
+                }
+                if (pipelineInfo.idInst.rs2 == pipelineInfo.wbInst.rd) {
+                    pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.arithResult;
+                }
+                pipelineInfo.exInst = nop(BUBBLE);
+                // "refresh" the branch's next PC
+                pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
             } else {
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
                 if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
