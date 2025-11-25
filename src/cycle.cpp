@@ -181,7 +181,9 @@ Status runCycles(uint64_t cycles) {
                     pipelineInfo.idInst = nop(SQUASHED);
                 } else {
                     std::cout << "correct branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
-                    pipelineInfo.ifInst.status = NORMAL;
+                    if (!pipelineInfo.ifInst.isNop) {
+                        pipelineInfo.ifInst.status = NORMAL;
+                    }
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
                 pipelineInfo.ifInst = simulator->simIF(PC);
