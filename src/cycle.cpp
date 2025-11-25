@@ -161,7 +161,7 @@ Status runCycles(uint64_t cycles) {
             }
 
             if (pipelineInfo.idInst.opcode == OP_BRANCH 
-                && (pipelineInfo.memInst.opcode == OP_INT || pipelineInfo.exInst.opcode == OP_INTIMM 
+                && (pipelineInfo.exInst.opcode == OP_INT || pipelineInfo.exInst.opcode == OP_INTIMM 
                     || pipelineInfo.exInst.opcode == OP_INTIMMW || pipelineInfo.exInst.opcode == OP_INTW || pipelineInfo.exInst.opcode == OP_AUIPC)
                 && (pipelineInfo.idInst.rs1 == pipelineInfo.exInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.exInst.rd)) {
 
@@ -171,9 +171,8 @@ Status runCycles(uint64_t cycles) {
                 if (pipelineInfo.idInst.rs2 == pipelineInfo.exInst.rd) {
                     pipelineInfo.idInst.op2Val = pipelineInfo.exInst.arithResult;
                 }
-                pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
                 pipelineInfo.exInst = nop(BUBBLE);
-                pipelineInfo.idInst = pipelineInfo.idInst;
+                pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
                 pipelineInfo.ifInst.status = SPECULATIVE;
             } else {
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
