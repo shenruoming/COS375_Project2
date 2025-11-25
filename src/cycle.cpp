@@ -189,7 +189,7 @@ Status runCycles(uint64_t cycles) {
                 && (pipelineInfo.wbInst.opcode == OP_LOAD)
                 && (pipelineInfo.idInst.rs1 == pipelineInfo.wbInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.wbInst.rd)) {
 
-                pipelineInfo.idInst = simulator->simID(pipelineInfo.idInst);
+                // pipelineInfo.idInst = simulator->simID(pipelineInfo.idInst);
                 // should we call operand collection here again so that we have the most up to date input register
                 if (pipelineInfo.idInst.rs1 == pipelineInfo.wbInst.rd) {
                     pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.memResult;
