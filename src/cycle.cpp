@@ -172,7 +172,7 @@ Status runCycles(uint64_t cycles) {
                 }
                 pipelineInfo.exInst = nop(BUBBLE);
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
-                pipelineInfo.ifInst.status = SPECULATIVE;
+                // pipelineInfo.ifInst.status = SPECULATIVE;
             } else {
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
                 if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
@@ -187,6 +187,9 @@ Status runCycles(uint64_t cycles) {
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
                 pipelineInfo.ifInst = simulator->simIF(PC);
+                if (pipelineInfo.idInst.opcode == OP_BRANCH) {
+                    pipelineInfo.ifInst.status = SPECULATIVE;
+                }
                 PC = PC + 4;
                 
             }
