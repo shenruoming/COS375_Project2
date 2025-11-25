@@ -72,7 +72,6 @@ Status runCycles(uint64_t cycles) {
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
         // forward to rs2 of load if needed: no stall for load-store (WB-> MEM)
         if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.exInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.exInst.rs2) {
-            std::cout << "should NOT be here: "  << PC << std::endl;
             pipelineInfo.exInst.op2Val = pipelineInfo.wbInst.memResult;
         }
         pipelineInfo.memInst = simulator->simMEM(pipelineInfo.exInst);
@@ -177,9 +176,11 @@ Status runCycles(uint64_t cycles) {
             } else {
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
                 if (pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
+                    std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
                     PC = pipelineInfo.idInst.nextPC;
                     pipelineInfo.idInst = nop(SQUASHED);
                 } else {
+                    std::cout << "correct branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
                     pipelineInfo.ifInst.status = NORMAL;
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
