@@ -175,7 +175,7 @@ Status runCycles(uint64_t cycles) {
                 pipelineInfo.ifInst.status = SPECULATIVE;
             } else {
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
-                if (pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
+                if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
                     std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
                     PC = pipelineInfo.idInst.nextPC;
                     pipelineInfo.idInst = nop(SQUASHED);
