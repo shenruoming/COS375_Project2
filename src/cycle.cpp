@@ -177,8 +177,8 @@ Status runCycles(uint64_t cycles) {
             } else {
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
                 if (pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
-                    pipelineInfo.idInst = nop(SQUASHED);
                     PC = pipelineInfo.idInst.nextPC;
+                    pipelineInfo.idInst = nop(SQUASHED);
                 } else {
                     pipelineInfo.ifInst.status = NORMAL;
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
