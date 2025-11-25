@@ -176,6 +176,7 @@ Status runCycles(uint64_t cycles) {
             } else if (pipelineInfo.idInst.opcode == OP_BRANCH 
                 && (pipelineInfo.exInst.opcode == OP_LOAD)
                 && (pipelineInfo.idInst.rs1 == pipelineInfo.exInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.exInst.rd)) {
+                // should 
                 if (pipelineInfo.idInst.rs1 == pipelineInfo.exInst.rd) {
                     pipelineInfo.idInst.op1Val = pipelineInfo.exInst.arithResult;
                 }
@@ -188,11 +189,13 @@ Status runCycles(uint64_t cycles) {
                 && (pipelineInfo.wbInst.opcode == OP_LOAD)
                 && (pipelineInfo.idInst.rs1 == pipelineInfo.wbInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.wbInst.rd)) {
 
+                pipelineInfo.idInst = simulator->simOperandCollection(pipelineInfo.idInst);
+                // should we call operand collection here again so that we have the most up to date input register
                 if (pipelineInfo.idInst.rs1 == pipelineInfo.wbInst.rd) {
-                    pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.arithResult;
+                    pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.memResult;
                 }
                 if (pipelineInfo.idInst.rs2 == pipelineInfo.wbInst.rd) {
-                    pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.arithResult;
+                    pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.memResult;
                 }
                 pipelineInfo.exInst = nop(BUBBLE);
                 // "refresh" the branch's next PC
