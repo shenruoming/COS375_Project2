@@ -10,5 +10,5 @@ add t4, t4, t4
 ld t5, 216(t4)
 add t6, t5, t4     # t6 = 30 + 24
 add t6, t5, t4
-sd a3, 0(t5) 
+sd a3, 250(t5) 
 .word 0xfeedfeed
