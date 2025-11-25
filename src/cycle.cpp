@@ -84,6 +84,25 @@ Status runCycles(uint64_t cycles) {
             (pipelineInfo.idInst.rs1 == pipelineInfo.memInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.memInst.rd)) {
             pipelineInfo.ifInst = pipelineInfo.ifInst;
             pipelineInfo.idInst = pipelineInfo.idInst;
+
+            // forward to ID instruction before we lose the WB instruction
+            if (pipelineInfo.wbInst.opcode == OP_LOAD) {
+                if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
+                    pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.memResult;
+                }
+                if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
+                    pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.memResult;
+                }
+            } else {
+                // for case where we need WB instruct arith result for addition in instruc
+                if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
+                    pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.arithResult;
+                }
+                if (pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
+                    pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.arithResult;
+                }
+            }
+        
             pipelineInfo.exInst = nop(BUBBLE);
         // load-use for store (rs1 is in conflict) if we are storing at a register we just loaded the value of.
         } else if (pipelineInfo.memInst.opcode == OP_LOAD && pipelineInfo.idInst.opcode == OP_STORE &&
