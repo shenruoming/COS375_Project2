@@ -160,20 +160,50 @@ Status runCycles(uint64_t cycles) {
                 pipelineInfo.idInst.op2Val = pipelineInfo.memInst.arithResult;
             }
 
-            pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
-            // // if we are storing a register that we just loaded to (no stall)
+            if (pipelineInfo.idInst.opcode == OP_BRANCH 
+                && (pipelineInfo.memInst.opcode == OP_INT || pipelineInfo.exInst.opcode == OP_INTIMM 
+                    || pipelineInfo.exInst.opcode == OP_INTIMMW || pipelineInfo.exInst.opcode == OP_INTW || pipelineInfo.exInst.opcode == OP_AUIPC)
+                && (pipelineInfo.idInst.rs1 == pipelineInfo.exInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.exInst.rd)) {
+
+                if (pipelineInfo.idInst.rs1 == pipelineInfo.exInst.rd) {
+                    pipelineInfo.idInst.op1Val = pipelineInfo.exInst.arithResult;
+                }
+                if (pipelineInfo.idInst.rs2 == pipelineInfo.exInst.rd) {
+                    pipelineInfo.idInst.op2Val = pipelineInfo.exInst.arithResult;
+                }
+                pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
+                pipelineInfo.exInst = nop(BUBBLE);
+                pipelineInfo.idInst = pipelineInfo.idInst;
+                pipelineInfo.ifInst.status = SPECULATIVE;
+            } else {
+                pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
+                if (pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
+                    pipelineInfo.idInst = nop(SQUASHED);
+                    PC = pipelineInfo.idInst.nextPC;
+                } else {
+                    pipelineInfo.ifInst.status = NORMAL;
+                    pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
+                }
+                pipelineInfo.ifInst = simulator->simIF(PC);
+                PC = PC + 4;
+                
+            }
+
+            // pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
+            // if we are storing a register that we just loaded to (no stall)
             // if (pipelineInfo.memInst.opcode == OP_LOAD && pipelineInfo.exInst.opcode == OP_STORE && pipelineInfo.memInst.rd == pipelineInfo.exInst.rs2) {
             //     pipelineInfo.exInst.op2Val = pipelineInfo.memInst.memResult;
             // }
-            std::cout << "result of ex: "  << pipelineInfo.exInst.arithResult << std::endl;
+            // std::cout << "result of ex: "  << pipelineInfo.exInst.arithResult << std::endl;
     
-            pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
+            // pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
             
-            std::cout << "next pc: "  << PC << std::endl;
+            // std::cout << "next pc: "  << PC << std::endl;
 
-            pipelineInfo.ifInst = simulator->simIF(PC);
-            // have to update for branching
-            PC = PC + 4;
+            // pipelineInfo.ifInst = simulator->simIF(PC);
+            // // have to update for branching
+            // PC = PC + 4;
+
         }
         
         
