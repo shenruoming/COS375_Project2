@@ -69,7 +69,6 @@ Status runCycles(uint64_t cycles) {
         cycleCount++;
  
         pipelineInfo.wbInst = nop(BUBBLE);
-        std::cout << "should be 24 "  << pipelineInfo.memInst.arithResult << std::endl;
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
         // forward to rs2 of load if needed: no stall for load-store (WB-> MEM)
         if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.exInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.exInst.rs2) {
@@ -107,6 +106,19 @@ Status runCycles(uint64_t cycles) {
                 std::cout << "forwarding from WB to ID before executing ID for rs2 (load->store): "  << PC << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.memResult;
             }
+
+            if (pipelineInfo.wbInst.opcode == OP_LOAD 
+                && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
+                std::cout << "forwarding from WB to ID before executing ID for rs1 (load->add): "  << PC << std::endl;
+                pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.memResult;
+            }
+            if (pipelineInfo.wbInst.opcode == OP_LOAD 
+                && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
+                std::cout << "forwarding from WB to ID before executing ID for rs2 (load->add): "  << PC << std::endl;
+                pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.memResult;
+            }
+
+
             // MAKE SURE HERE THAT WB INSTR OR MEM INSTR ISNT A BRANCH 
             // checking if register we need for execute was just calculated add -> smth -> add
             if (pipelineInfo.wbInst.opcode != OP_LOAD && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
