@@ -273,6 +273,7 @@ Status runCycles(uint64_t cycles) {
 // status tells you to HALT or ERROR out
 Status runTillHalt() {
     uint64_t address = 0x0;
+    iCache->dump(output);
     while (address <= 52) {
         iCache->access(address, CACHE_READ);
         address += 4;
