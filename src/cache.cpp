@@ -5,6 +5,7 @@
 #include <random>
 #include <list>
 #include <stdio.h>
+#include <algorithm>
 
 using namespace std;
 

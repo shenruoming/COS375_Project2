@@ -277,6 +277,7 @@ Status runTillHalt() {
         iCache->access(address, CACHE_READ);
         address += 4;
     }
+    return SUCCESS;
     // Status status;
     // while (true) {
     //     status = static_cast<Status>(runCycles(1));
