@@ -26,7 +26,9 @@ Cache::Cache(CacheConfig configParam, CacheDataType cacheType) : config(configPa
 // Access method definition
 bool Cache::access(uint64_t address, CacheOperation readWrite) {
     uint64_t index = getIndex(address);
+    cout << "index: "  << index << endl;
     uint64_t tag = getTag(address);
+    cout << "tag: "  << tag << endl;
     auto cacheSet = cacheTable.find(index);
     if (cacheSet == cacheTable.end()) {
         misses += 1;
