@@ -2,6 +2,7 @@
 #include <inttypes.h>
 #include <iostream>
 #include <vector>
+#include <cmath>
 #include "Utilities.h"
 
 struct CacheConfig {
@@ -31,6 +32,7 @@ private:
 
 public:
     CacheConfig config;
+    uint64_t numSets;
     // Constructor to initialize the cache parameters
     Cache(CacheConfig configParam, CacheDataType cacheType);
 
@@ -49,4 +51,7 @@ public:
 
     uint64_t getHits() { return hits; }
     uint64_t getMisses() { return misses; }
+
+    uint64_t getIndex(uint64_t address);
+    uint64_t getTag(uint64_t address);
 };

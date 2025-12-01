@@ -3,6 +3,8 @@
 
 #include "cache.h"
 #include <random>
+#include <list>
+#include <stdio.h>
 
 using namespace std;
 
@@ -10,19 +12,64 @@ using namespace std;
 static std::mt19937 generator(42);  // Fixed seed for deterministic results
 std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
+std::unordered_map<int, list<uint64_t>> cacheTable;
+
 // Constructor definition
 Cache::Cache(CacheConfig configParam, CacheDataType cacheType) : config(configParam) {
     // Here you can initialize other cache-specific attributes
     // For instance, if you had cache tables or other structures, initialize them here
+    numSets = config.cacheSize / config.blockSize / config.ways;
+    type = cacheType;
 }
 
 // Access method definition
 bool Cache::access(uint64_t address, CacheOperation readWrite) {
-    // For simplicity, we're using a random boolean to simulate cache hit/miss
-    bool hit = distribution(generator) < 0.20;  // random 20% hit for a strange cache
-    hits += hit;
-    misses += !hit;
-    return hit;
+    uint64_t index = getIndex(address);
+    uint64_t tag = getTag(address);
+    auto cacheSet = cacheTable.find(index);
+    if (cacheSet == cacheTable.end()) {
+        misses += 1;
+        list<uint64_t> set = {tag};
+        cacheTable.insert({index, set});
+        cout << "miss: "  << address << endl;
+        return false;
+    }
+    auto set = cacheSet->second;
+    auto element = std::find(set.begin(), set.end(), tag);
+    if (element == set.end()) {
+        misses += 1;
+        if (set.size() < config.ways) {
+            set.push_back(tag);
+        } else {
+            set.pop_front();
+            set.push_back(tag);
+        } 
+        cout << "miss: "  << address << endl;
+        return false;
+    } else {
+        set.remove(tag);
+        set.push_back(tag);
+        hits += 1;
+        cout << "hit: "  << address << endl;
+        return true;
+    }
+}
+
+// getIndex method definition
+uint64_t Cache::getIndex(uint64_t address) {
+    int numOffsetBits = log(config.blockSize);
+    int numIndexBits = log(numSets);
+    uint64_t indexMask = 0xFFFFFFFFFFFFFFFF << (64 - numIndexBits) >> (64 - numIndexBits);
+    uint64_t index = (address >> numOffsetBits) & indexMask;
+    return index;
+}
+
+// getTag method definition
+uint64_t Cache::getTag(uint64_t address) {
+    int numOffsetBits = log(config.blockSize);
+    int numIndexBits = log(numSets);
+    uint64_t tag = address >> (numOffsetBits + numIndexBits);
+    return tag;
 }
 
 // debug: dump information as you needed, here are some examples

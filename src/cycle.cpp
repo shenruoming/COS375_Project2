@@ -17,6 +17,8 @@ static uint64_t cycleCount = 0;
 
 static uint64_t PC = 0;
 
+static bool reachedIllegal = false;
+
 /**TODO: Implement pipeline simulation for the RISCV machine in this file.
  * A basic template is provided below that doesn't account for any hazards.
  */
@@ -201,6 +203,12 @@ Status runCycles(uint64_t cycles) {
                 // "refresh" the branch's next PC
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
             } else {
+                // exception handling for illegal instruction
+                // if (!pipelineInfo.idInst.isLegal) {
+                //     pipelineInfo.idInst = nop(SQUASHED);
+                //     reachedIllegal = true;
+                // }
+
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
                 if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
                     std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
@@ -211,6 +219,10 @@ Status runCycles(uint64_t cycles) {
                     if (!pipelineInfo.ifInst.isNop) {
                         pipelineInfo.ifInst.status = NORMAL;
                     }
+                    // after raising an illegal instruction exception, squash future instructions
+                    // if (reachedIllegal) {
+                    //     pipelineInfo.ifInst = nop(SQUASHED);
+                    // }
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
                 pipelineInfo.ifInst = simulator->simIF(PC);
@@ -218,23 +230,18 @@ Status runCycles(uint64_t cycles) {
                     pipelineInfo.ifInst.status = SPECULATIVE;
                 }
                 PC = PC + 4;
+                // exception handling: jump to address 0x8000 after reaching first illegal instruction
+                // if (reachedIllegal && PC < 0x8000) {
+                //     PC = 0x8000;
+                //     // update status??
+                //     if (status != HALT) {
+                //         status = ERROR;
+                //     }
+                // } else {
+                //     PC = PC + 4;
+                // }
                 
             }
-
-            // pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
-            // if we are storing a register that we just loaded to (no stall)
-            // if (pipelineInfo.memInst.opcode == OP_LOAD && pipelineInfo.exInst.opcode == OP_STORE && pipelineInfo.memInst.rd == pipelineInfo.exInst.rs2) {
-            //     pipelineInfo.exInst.op2Val = pipelineInfo.memInst.memResult;
-            // }
-            // std::cout << "result of ex: "  << pipelineInfo.exInst.arithResult << std::endl;
-    
-            // pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
-            
-            // std::cout << "next pc: "  << PC << std::endl;
-
-            // pipelineInfo.ifInst = simulator->simIF(PC);
-            // // have to update for branching
-            // PC = PC + 4;
 
         }
         
@@ -265,18 +272,23 @@ Status runCycles(uint64_t cycles) {
 // run till halt (call runCycles() with cycles == 1 each time) until
 // status tells you to HALT or ERROR out
 Status runTillHalt() {
-    Status status;
-    while (true) {
-        status = static_cast<Status>(runCycles(1));
-        if (status == HALT) break;
+    uint64_t address = 0x0;
+    while (address <= 52) {
+        iCache->access(address, CACHE_READ);
+        address += 4;
     }
-    return status;
+    // Status status;
+    // while (true) {
+    //     status = static_cast<Status>(runCycles(1));
+    //     if (status == HALT) break;
+    // }
+    // return status;
 }
 
 // dump the state of the simulator
 Status finalizeSimulator() {
-    simulator->dumpRegMem(output);
-    SimulationStats stats{simulator->getDin(),  cycleCount, 0, 0, 0, 0, 0};  // TODO incomplete implementation
-    dumpSimStats(stats, output);
+    // simulator->dumpRegMem(output);
+    // SimulationStats stats{simulator->getDin(),  cycleCount, 0, 0, 0, 0, 0};  // TODO incomplete implementation
+    // dumpSimStats(stats, output);
     return SUCCESS;
 }
