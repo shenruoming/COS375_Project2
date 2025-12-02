@@ -32,7 +32,6 @@ private:
 
 public:
     CacheConfig config;
-    uint64_t numSets;
     // Constructor to initialize the cache parameters
     Cache(CacheConfig configParam, CacheDataType cacheType);
 

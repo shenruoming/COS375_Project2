@@ -21,7 +21,7 @@ int numIndexBits;
 Cache::Cache(CacheConfig configParam, CacheDataType cacheType) : config(configParam) {
     // Here you can initialize other cache-specific attributes
     // For instance, if you had cache tables or other structures, initialize them here
-    numSets = config.cacheSize / config.blockSize / config.ways;
+    uint64_t numSets = config.cacheSize / config.blockSize / config.ways;
     type = cacheType;
     numOffsetBits = log2(config.blockSize);
     numIndexBits = log2(numSets);
