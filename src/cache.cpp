@@ -13,7 +13,7 @@ using namespace std;
 static std::mt19937 generator(42);  // Fixed seed for deterministic results
 std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
-std::unordered_map<int, list<uint64_t>> cacheTable;
+std::unordered_map<int, list<uint64_t>*> cacheTable;
 
 // Constructor definition
 Cache::Cache(CacheConfig configParam, CacheDataType cacheType) : config(configParam) {
@@ -32,29 +32,30 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
     if (cacheSet == cacheTable.end()) {
         misses += 1;
         list<uint64_t> set = {tag};
-        cacheTable.insert({index, set});
+        cacheTable.insert({index, &set});
         cout << "miss: "  << address << endl;
         return false;
     }
     auto set = cacheSet->second;
-    auto element = std::find(set.begin(), set.end(), tag);
-    if (element == set.end()) {
+    auto element = std::find(set->begin(), set->end(), tag);
+    if (element == set->end()) {
         misses += 1;
-        cout << "size of set: "  << set.size() << endl;
-        cout << "front of set: "  << set.front() << endl;
-        if (set.size() < config.ways) {
-            set.push_back(tag);
-            cout << "new size of set: "  << set.size() << endl;
+        cout << "size of set: "  << set->size() << endl;
+        cout << "front of set: "  << set->front() << endl;
+        cout << "back of set: "  << set->front() << endl;
+        if (set->size() < config.ways) {
+            set->push_back(tag);
+            cout << "new size of set: "  << set->size() << endl;
         } else {
-            cout << "removing: "  << set.front() << endl;
-            set.pop_front();
-            set.push_back(tag);
+            cout << "removing: "  << set->front() << endl;
+            set->pop_front();
+            set->push_back(tag);
         } 
         cout << "miss: "  << address << endl;
         return false;
     } else {
-        set.remove(tag);
-        set.push_back(tag);
+        set->remove(tag);
+        set->push_back(tag);
         hits += 1;
         cout << "hit: "  << address << endl;
         return true;
