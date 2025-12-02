@@ -44,6 +44,7 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
         if (set.size() < config.ways) {
             set.push_back(tag);
         } else {
+            cout << "removing: "  << set.front() << endl;
             set.pop_front();
             set.push_back(tag);
         } 
