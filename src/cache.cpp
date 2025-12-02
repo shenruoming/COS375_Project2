@@ -14,6 +14,8 @@ static std::mt19937 generator(42);  // Fixed seed for deterministic results
 std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
 std::unordered_map<int, list<uint64_t>*> cacheTable;
+int numOffsetBits;
+int numIndexBits;
 
 // Constructor definition
 Cache::Cache(CacheConfig configParam, CacheDataType cacheType) : config(configParam) {
@@ -21,6 +23,8 @@ Cache::Cache(CacheConfig configParam, CacheDataType cacheType) : config(configPa
     // For instance, if you had cache tables or other structures, initialize them here
     numSets = config.cacheSize / config.blockSize / config.ways;
     type = cacheType;
+    numOffsetBits = log2(config.blockSize);
+    numIndexBits = log2(numSets);
 }
 
 // Access method definition
@@ -40,14 +44,10 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
     auto element = std::find(set->begin(), set->end(), tag);
     if (element == set->end()) {
         misses += 1;
-        cout << "size of set: "  << set->size() << endl;
-        cout << "front of set: "  << set->front() << endl;
-        cout << "back of set: "  << set->front() << endl;
         if (set->size() < config.ways) {
             set->push_back(tag);
-            cout << "new size of set: "  << set->size() << endl;
         } else {
-            cout << "removing: "  << set->front() << endl;
+            cout << "cache set is full, removing: "  << set->front() << endl;
             set->pop_front();
             set->push_back(tag);
         } 
@@ -64,18 +64,13 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
 
 // getIndex method definition
 uint64_t Cache::getIndex(uint64_t address) {
-    int numOffsetBits = log2(config.blockSize);
-    int numIndexBits = log2(numSets);
     uint64_t index = address >> numOffsetBits;
     index = index << (64 - numIndexBits - numOffsetBits) >> (64 - numIndexBits - numOffsetBits);
-
     return index;
 }
 
 // getTag method definition
 uint64_t Cache::getTag(uint64_t address) {
-    int numOffsetBits = log2(config.blockSize);
-    int numIndexBits = log2(numSets);
     uint64_t tag = address >> (numOffsetBits + numIndexBits);
     return tag;
 }
