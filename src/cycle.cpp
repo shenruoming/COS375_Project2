@@ -272,11 +272,10 @@ Status runCycles(uint64_t cycles) {
 // run till halt (call runCycles() with cycles == 1 each time) until
 // status tells you to HALT or ERROR out
 Status runTillHalt() {
-    uint64_t address = 0x0;
+    uint64_t addresses[6] = {0x0, 0x4, 0x8, 0x0000F0011,  0x000FF0011, 0x0};
     iCache->dump(output);
-    while (address <= 52) {
-        iCache->access(address, CACHE_READ);
-        address += 4;
+    for (int i = 0; i < 6; i++) {
+        iCache->access(addresses[i], CACHE_READ);
     }
     return SUCCESS;
     // Status status;
