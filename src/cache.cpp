@@ -62,8 +62,9 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
 uint64_t Cache::getIndex(uint64_t address) {
     int numOffsetBits = log(config.blockSize);
     int numIndexBits = log(numSets);
-    uint64_t indexMask = 0xFFFFFFFFFFFFFFFF << (64 - numIndexBits) >> (64 - numIndexBits);
-    uint64_t index = (address >> numOffsetBits) & indexMask;
+    uint64_t index = address >> numOffsetBits;
+    index = index << (64 - numIndexBits - numOffsetBits) >> (64 - numIndexBits - numOffsetBits);
+
     return index;
 }
 
