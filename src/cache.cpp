@@ -28,7 +28,6 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
     uint64_t index = getIndex(address);
     cout << "index: "  << index << endl;
     uint64_t tag = getTag(address);
-    cout << "tag: "  << tag << endl;
     auto cacheSet = cacheTable.find(index);
     if (cacheSet == cacheTable.end()) {
         misses += 1;
@@ -44,6 +43,7 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
         cout << "size of set: "  << set.size() << endl;
         if (set.size() < config.ways) {
             set.push_back(tag);
+            cout << "new size of set: "  << set.size() << endl;
         } else {
             cout << "removing: "  << set.front() << endl;
             set.pop_front();
