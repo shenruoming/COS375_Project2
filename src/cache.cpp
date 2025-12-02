@@ -41,6 +41,7 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
     auto element = std::find(set.begin(), set.end(), tag);
     if (element == set.end()) {
         misses += 1;
+        cout << "size of set: "  << set.size() << endl;
         if (set.size() < config.ways) {
             set.push_back(tag);
         } else {
