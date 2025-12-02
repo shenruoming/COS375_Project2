@@ -63,6 +63,7 @@ uint64_t Cache::getIndex(uint64_t address) {
     int numOffsetBits = log(config.blockSize);
     int numIndexBits = log(numSets);
     uint64_t index = address >> numOffsetBits;
+    cout << "getIndex: "  << index << endl;
     index = index << (64 - numIndexBits - numOffsetBits) >> (64 - numIndexBits - numOffsetBits);
 
     return index;
