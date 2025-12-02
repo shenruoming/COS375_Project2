@@ -18,6 +18,8 @@ static uint64_t cycleCount = 0;
 static uint64_t PC = 0;
 
 static bool reachedIllegal = false;
+static int numDCacheStalls = 0;
+static int numICacheStalls = 0;
 
 /**TODO: Implement pipeline simulation for the RISCV machine in this file.
  * A basic template is provided below that doesn't account for any hazards.
@@ -71,6 +73,16 @@ Status runCycles(uint64_t cycles) {
         cycleCount++;
  
         pipelineInfo.wbInst = nop(BUBBLE);
+
+        // simulate D-cache stalls
+        if (numDCacheStalls > 0) {
+            numDCacheStalls -= 1;
+            if (numICacheStalls > 0) {
+                numICacheStalls -= 1;
+            }
+            break;
+        }
+
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
         // forward to rs2 of load if needed: no stall for load-store (WB-> MEM)
         if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.exInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.exInst.rs2) {
@@ -78,6 +90,17 @@ Status runCycles(uint64_t cycles) {
         }
         pipelineInfo.memInst = simulator->simMEM(pipelineInfo.exInst);
 
+        // simulate D-cache
+        if (pipelineInfo.memInst.opcode == OP_LOAD || pipelineInfo.memInst.opcode == OP_STORE) {
+            CacheOperation op = CACHE_READ;
+            if (pipelineInfo.memInst.opcode == OP_STORE) {
+                op = CACHE_WRITE;
+            }
+            bool hit = dCache->access(pipelineInfo.memInst.PC, op);
+            if (!hit) {
+                numDCacheStalls = dCache->config.missLatency;
+            }
+        }
         
         // applies to load-use with stalling
         // load-use for R-type (load first, then use as an input register)
@@ -210,6 +233,8 @@ Status runCycles(uint64_t cycles) {
                 // }
 
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
+
+                
                 if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
                     std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
                     PC = pipelineInfo.idInst.nextPC;
@@ -228,6 +253,12 @@ Status runCycles(uint64_t cycles) {
                 pipelineInfo.ifInst = simulator->simIF(PC);
                 if (pipelineInfo.idInst.opcode == OP_BRANCH) {
                     pipelineInfo.ifInst.status = SPECULATIVE;
+                }
+
+                // simulate ICache
+                bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
+                if (!iHit) {
+                    numICacheStalls = iCache->config.missLatency;
                 }
                 PC = PC + 4;
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
@@ -272,23 +303,23 @@ Status runCycles(uint64_t cycles) {
 // run till halt (call runCycles() with cycles == 1 each time) until
 // status tells you to HALT or ERROR out
 Status runTillHalt() {
-    uint64_t addresses[6] = {0x0, 0x4, 0x8, 0x0000F0001,  0x000FF0001, 0x0};
-    for (int i = 0; i < 6; i++) {
-        iCache->access(addresses[i], CACHE_READ);
-    }
-    return SUCCESS;
-    // Status status;
-    // while (true) {
-    //     status = static_cast<Status>(runCycles(1));
-    //     if (status == HALT) break;
+    // uint64_t addresses[6] = {0x0, 0x4, 0x8, 0x0000F0001,  0x000FF0001, 0x0};
+    // for (int i = 0; i < 6; i++) {
+    //     iCache->access(addresses[i], CACHE_READ);
     // }
-    // return status;
+    // return SUCCESS;
+    Status status;
+    while (true) {
+        status = static_cast<Status>(runCycles(1));
+        if (status == HALT) break;
+    }
+    return status;
 }
 
 // dump the state of the simulator
 Status finalizeSimulator() {
-    // simulator->dumpRegMem(output);
-    // SimulationStats stats{simulator->getDin(),  cycleCount, 0, 0, 0, 0, 0};  // TODO incomplete implementation
-    // dumpSimStats(stats, output);
+    simulator->dumpRegMem(output);
+    SimulationStats stats{simulator->getDin(),  cycleCount, 0, 0, 0, 0, 0};  // TODO incomplete implementation
+    dumpSimStats(stats, output);
     return SUCCESS;
 }
