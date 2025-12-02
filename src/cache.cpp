@@ -85,7 +85,7 @@ Status Cache::dump(const std::string& base_output_name) {
         cache_out << "Cache Configuration:" << std::endl;
         cache_out << "Size: " << config.cacheSize << " bytes" << std::endl;
         cache_out << "Block Size: " << config.blockSize << " bytes" << std::endl;
-        cache_out << "Ways: " << (config.ways == 1) << std::endl;
+        cache_out << "Ways: " << (config.ways) << std::endl;
         cache_out << "Miss Latency: " << config.missLatency << " cycles" << std::endl;
         cache_out << "---------------------" << endl;
         cache_out << "End Register Values" << endl;
