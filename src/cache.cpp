@@ -60,8 +60,8 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
 
 // getIndex method definition
 uint64_t Cache::getIndex(uint64_t address) {
-    int numOffsetBits = log(config.blockSize);
-    int numIndexBits = log(numSets);
+    int numOffsetBits = log2(config.blockSize);
+    int numIndexBits = log2(numSets);
     uint64_t index = address >> numOffsetBits;
     cout << "getIndex: "  << numOffsetBits << endl;
     index = index << (64 - numIndexBits - numOffsetBits) >> (64 - numIndexBits - numOffsetBits);
