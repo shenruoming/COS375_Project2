@@ -72,6 +72,7 @@ uint64_t Cache::getIndex(uint64_t address) {
 // getTag method definition
 uint64_t Cache::getTag(uint64_t address) {
     uint64_t tag = address >> (numOffsetBits + numIndexBits);
+    cout << "getTag: "  << tag << endl;
     return tag;
 }
 
