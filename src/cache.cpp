@@ -58,8 +58,11 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
         cout << "miss: "  << address << endl;
         return false;
     } else {
+        cout << "line line 61 in cache.cpp " << endl;
         set->remove(tag);
+        cout << "line line 63 in cache.cpp " << endl;
         set->push_back(tag);
+        cout << "line line 65 in cache.cpp " << endl;
         hits += 1;
         cout << "hit: "  << address << endl;
         return true;
