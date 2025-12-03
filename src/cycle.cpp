@@ -75,13 +75,13 @@ Status runCycles(uint64_t cycles) {
         pipelineInfo.wbInst = nop(BUBBLE);
 
         // simulate D-cache stalls
-        if (numDCacheStalls > 0) {
-            numDCacheStalls -= 1;
-            if (numICacheStalls > 0) {
-                numICacheStalls -= 1;
-            }
-            break;
-        }
+        // if (numDCacheStalls > 0) {
+        //     numDCacheStalls -= 1;
+        //     if (numICacheStalls > 0) {
+        //         numICacheStalls -= 1;
+        //     }
+        //     break;
+        // }
 
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
         // forward to rs2 of load if needed: no stall for load-store (WB-> MEM)
@@ -91,15 +91,22 @@ Status runCycles(uint64_t cycles) {
         pipelineInfo.memInst = simulator->simMEM(pipelineInfo.exInst);
 
         // simulate D-cache
-        if (pipelineInfo.memInst.opcode == OP_LOAD || pipelineInfo.memInst.opcode == OP_STORE) {
-            CacheOperation op = CACHE_READ;
-            if (pipelineInfo.memInst.opcode == OP_STORE) {
-                op = CACHE_WRITE;
-            }
-            bool hit = dCache->access(pipelineInfo.memInst.PC, op);
-            if (!hit) {
-                numDCacheStalls = dCache->config.missLatency;
-            }
+        // if (pipelineInfo.memInst.opcode == OP_LOAD || pipelineInfo.memInst.opcode == OP_STORE) {
+        //     CacheOperation op = CACHE_READ;
+        //     if (pipelineInfo.memInst.opcode == OP_STORE) {
+        //         op = CACHE_WRITE;
+        //     }
+        //     bool hit = dCache->access(pipelineInfo.memInst.PC, op);
+        //     if (!hit) {
+        //         numDCacheStalls = dCache->config.missLatency;
+        //     }
+        // }
+
+        // exception handling for illegal instruction 
+        // Sarah moved this here
+        if (!pipelineInfo.idInst.isLegal) {
+            pipelineInfo.idInst = nop(SQUASHED);
+            reachedIllegal = true;
         }
         
         // applies to load-use with stalling
@@ -226,11 +233,6 @@ Status runCycles(uint64_t cycles) {
                 // "refresh" the branch's next PC
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
             } else {
-                // exception handling for illegal instruction
-                // if (!pipelineInfo.idInst.isLegal) {
-                //     pipelineInfo.idInst = nop(SQUASHED);
-                //     reachedIllegal = true;
-                // }
 
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
@@ -245,9 +247,9 @@ Status runCycles(uint64_t cycles) {
                         pipelineInfo.ifInst.status = NORMAL;
                     }
                     // after raising an illegal instruction exception, squash future instructions
-                    // if (reachedIllegal) {
-                    //     pipelineInfo.ifInst = nop(SQUASHED);
-                    // }
+                    if (reachedIllegal) {
+                        pipelineInfo.ifInst = nop(SQUASHED);
+                    }
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
                 pipelineInfo.ifInst = simulator->simIF(PC);
@@ -256,21 +258,21 @@ Status runCycles(uint64_t cycles) {
                 }
 
                 // simulate ICache
-                bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
-                if (!iHit) {
-                    numICacheStalls = iCache->config.missLatency;
-                }
-                PC = PC + 4;
-                // exception handling: jump to address 0x8000 after reaching first illegal instruction
-                // if (reachedIllegal && PC < 0x8000) {
-                //     PC = 0x8000;
-                //     // update status??
-                //     if (status != HALT) {
-                //         status = ERROR;
-                //     }
-                // } else {
-                //     PC = PC + 4;
+                // bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
+                // if (!iHit) {
+                //     numICacheStalls = iCache->config.missLatency;
                 // }
+                // PC = PC + 4;
+                // exception handling: jump to address 0x8000 after reaching first illegal instruction
+                if (reachedIllegal && PC < 0x8000) {
+                    PC = 0x8000;
+                    // update status??
+                    if (status != HALT) {
+                        status = ERROR;
+                    }
+                } else {
+                    PC = PC + 4;
+                }
                 
             }
 
