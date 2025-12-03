@@ -30,6 +30,7 @@ Cache::Cache(CacheConfig configParam, CacheDataType cacheType) : config(configPa
 // Access method definition
 bool Cache::access(uint64_t address, CacheOperation readWrite) {
     uint64_t index = getIndex(address);
+    cout << "address: "  << address << endl;
     cout << "index: "  << index << endl;
     uint64_t tag = getTag(address);
     auto cacheSet = cacheTable.find(index);
@@ -41,7 +42,9 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
         cout << "miss: "  << address << endl;
         return false;
     }
+    cout << "line 44 in cache.cpp " << endl;
     auto set = cacheSet->second;
+    cout << "line 46 in cache.cpp " << endl;
     auto element = std::find(set->begin(), set->end(), tag);
     if (element == set->end()) {
         misses += 1;
