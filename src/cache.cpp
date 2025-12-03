@@ -33,6 +33,7 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
     cout << "index: "  << index << endl;
     uint64_t tag = getTag(address);
     auto cacheSet = cacheTable.find(index);
+    cout << "getTag: "  << tag << endl;
     if (cacheSet == cacheTable.end()) {
         misses += 1;
         list<uint64_t> set = {tag};
@@ -72,7 +73,6 @@ uint64_t Cache::getIndex(uint64_t address) {
 // getTag method definition
 uint64_t Cache::getTag(uint64_t address) {
     uint64_t tag = address >> (numOffsetBits + numIndexBits);
-    cout << "getTag: "  << tag << endl;
     return tag;
 }
 
