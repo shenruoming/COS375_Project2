@@ -260,7 +260,7 @@ Status runCycles(uint64_t cycles) {
                 // simulate ICache
                 bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
                 if (!iHit) {
-                    numICacheStalls = iCache.config.missLatency;
+                    numICacheStalls = iCache->config.missLatency;
                     // numICacheStalls = 5;
                 }
                 // PC = PC + 4;
