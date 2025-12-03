@@ -258,10 +258,10 @@ Status runCycles(uint64_t cycles) {
                 }
 
                 // simulate ICache
-                // bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
-                // if (!iHit) {
-                //     numICacheStalls = iCache->config.missLatency;
-                // }
+                bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
+                if (!iHit) {
+                    numICacheStalls = iCache->config.missLatency;
+                }
                 // PC = PC + 4;
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
                 if (reachedIllegal && PC < 0x8000) {
