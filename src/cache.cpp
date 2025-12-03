@@ -50,6 +50,7 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
     auto end = set->end();
     cout << "line 51 " << endl;
     auto element = std::find(set->begin(), set->end(), tag);
+    cout << "line 53 " << endl;
     if (element == set->end()) {
         misses += 1;
         if (set->size() < config.ways) {
