@@ -268,7 +268,8 @@ Status runCycles(uint64_t cycles) {
                     PC = 0x8000;
                     // update status??
                     if (status != HALT) {
-                        status = ERROR;
+                        // status = ERROR;
+                        status = HALT;
                     }
                 } else {
                     PC = PC + 4;
