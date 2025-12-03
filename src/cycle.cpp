@@ -308,23 +308,23 @@ Status runCycles(uint64_t cycles) {
 // status tells you to HALT or ERROR out
 Status runTillHalt() {
     std::cout << "is cache working "  << iCache->config.missLatency << std::endl;
-    uint64_t addresses[6] = {0x0, 0x4, 0x8, 0x0000F0001,  0x000FF0001, 0x0};
-    for (int i = 0; i < 6; i++) {
-        iCache->access(addresses[i], CACHE_READ);
-    }
-    return SUCCESS;
-    // Status status;
-    // while (true) {
-    //     status = static_cast<Status>(runCycles(1));
-    //     if (status == HALT) break;
+    // uint64_t addresses[6] = {0x0, 0x4, 0x8, 0x0000F0001,  0x000FF0001, 0x0};
+    // for (int i = 0; i < 6; i++) {
+    //     iCache->access(addresses[i], CACHE_READ);
     // }
-    // return status;
+    // return SUCCESS;
+    Status status;
+    while (true) {
+        status = static_cast<Status>(runCycles(1));
+        if (status == HALT) break;
+    }
+    return status;
 }
 
 // dump the state of the simulator
 Status finalizeSimulator() {
-    // simulator->dumpRegMem(output);
-    // SimulationStats stats{simulator->getDin(),  cycleCount, 0, 0, 0, 0, 0};  // TODO incomplete implementation
-    // dumpSimStats(stats, output);
+    simulator->dumpRegMem(output);
+    SimulationStats stats{simulator->getDin(),  cycleCount, 0, 0, 0, 0, 0};  // TODO incomplete implementation
+    dumpSimStats(stats, output);
     return SUCCESS;
 }
