@@ -235,7 +235,12 @@ Status runCycles(uint64_t cycles) {
             } else {
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
-                
+                if (numICacheStalls > 0) {
+                    pipelineInfo.idInst = nop(BUBBLE);
+                    numICacheStalls--;
+                    break;
+                } 
+
                 if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
                     std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
                     PC = pipelineInfo.idInst.nextPC;
@@ -252,36 +257,33 @@ Status runCycles(uint64_t cycles) {
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
 
-                if (numICacheStalls > 0) {
-                    pipelineInfo.ifInst = nop(BUBBLE);
-                    numICacheStalls--;
-                } else {
-                    pipelineInfo.ifInst = simulator->simIF(PC);
-                    if (pipelineInfo.idInst.opcode == OP_BRANCH) {
-                        pipelineInfo.ifInst.status = SPECULATIVE;
-                    }
-
-                    // simulate ICache
-                    std::cout << "line261 "  << std::endl;
-                    bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
-                    std::cout << "line263 "  << std::endl;
-                    if (!iHit) {
-                        numICacheStalls = iCache->config.missLatency;
-                        // numICacheStalls = 5;
-                    }
-                    // PC = PC + 4;
-                    // exception handling: jump to address 0x8000 after reaching first illegal instruction
-                    if (reachedIllegal && PC < 0x8000) {
-                        PC = 0x8000;
-                        // update status??
-                        if (status != HALT) {
-                            // status = ERROR;
-                            status = HALT;
-                        }
-                    } else {
-                        PC = PC + 4;
-                    }
+                pipelineInfo.ifInst = simulator->simIF(PC);
+                if (pipelineInfo.idInst.opcode == OP_BRANCH) {
+                    pipelineInfo.ifInst.status = SPECULATIVE;
                 }
+
+                
+                // simulate ICache
+                std::cout << "line261 "  << std::endl;
+                bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
+                std::cout << "line263 "  << std::endl;
+                if (!iHit) {
+                    numICacheStalls = iCache->config.missLatency;
+                    // numICacheStalls = 5;
+                }
+                // PC = PC + 4;
+                // exception handling: jump to address 0x8000 after reaching first illegal instruction
+                if (reachedIllegal && PC < 0x8000) {
+                    PC = 0x8000;
+                    // update status??
+                    if (status != HALT) {
+                        // status = ERROR;
+                        status = HALT;
+                    }
+                } else {
+                    PC = PC + 4;
+                }
+                
             }
 
         }
