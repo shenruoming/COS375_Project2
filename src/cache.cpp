@@ -45,8 +45,6 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
     cout << "line 44 in cache.cpp " << endl;
     auto set = cacheSet->second;
     cout << "line 46 in cache.cpp " << endl;
-    auto begin = set.begin();
-    auto end = set.end();
     auto element = std::find(set.begin(), set.end(), tag);
     cout << "line 53 " << endl;
     if (element == set.end()) {
