@@ -269,6 +269,7 @@ Status runCycles(uint64_t cycles) {
                 bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
                 std::cout << "line263 "  << std::endl;
                 if (!iHit) {
+                    std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
                     numICacheStalls = iCache->config.missLatency;
                     // numICacheStalls = 5;
                 }
