@@ -278,19 +278,16 @@ Status runCycles(uint64_t cycles) {
                 }
                 // PC = PC + 4;
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
-                if (reachedIllegal && PC < 0x8000) {
-                    PC = 0x8000;
-                    // update status??
-                    // if (status != HALT) {
-                    //     // status = ERROR;
-                    //     status = HALT;
-                    // }
+                if (reachedIllegal) {
+                    if (PC >= 0x8000) {
+                        if (status != HALT) {
+                            status == HALT;
+                        }
+                    } else {
+                        PC = 0x8000;
+                    }
                 } else {
                     PC = PC + 4;
-                }
-                if (pipelineInfo.wbInst.isHalt) {
-                    status = HALT;
-                    break;
                 }
                 
             }
