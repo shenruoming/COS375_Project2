@@ -90,18 +90,18 @@ Status runCycles(uint64_t cycles) {
         }
         pipelineInfo.memInst = simulator->simMEM(pipelineInfo.exInst);
 
-        // // simulate D-cache
-        // if (pipelineInfo.memInst.opcode == OP_LOAD || pipelineInfo.memInst.opcode == OP_STORE) {
-        //     CacheOperation op = CACHE_READ;
-        //     if (pipelineInfo.memInst.opcode == OP_STORE) {
-        //         op = CACHE_WRITE;
-        //     }
-        //     bool hit = dCache->access(pipelineInfo.memInst.memAddress, op);
-        //     if (!hit) {
-        //         std::cout << "d cache miss: "  << PC << std::endl;
-        //         numDCacheStalls = dCache->config.missLatency;
-        //     }
-        // }
+        // simulate D-cache
+        if (pipelineInfo.memInst.opcode == OP_LOAD || pipelineInfo.memInst.opcode == OP_STORE) {
+            CacheOperation op = CACHE_READ;
+            if (pipelineInfo.memInst.opcode == OP_STORE) {
+                op = CACHE_WRITE;
+            }
+            bool hit = dCache->access(pipelineInfo.memInst.memAddress, op);
+            if (!hit) {
+                std::cout << "d cache miss: "  << PC << std::endl;
+                numDCacheStalls = dCache->config.missLatency;
+            }
+        }
 
         // exception handling for illegal instruction 
         // Sarah moved this here
@@ -265,14 +265,14 @@ Status runCycles(uint64_t cycles) {
 
                 
                 // simulate ICache
-                std::cout << "i cache search " << pipelineInfo.ifInst.PC << std::endl;
-                bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
-                // std::cout << "line263 "  << std::endl;
-                if (!iHit) {
-                    std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
-                    numICacheStalls = iCache->config.missLatency;
-                    // numICacheStalls = 5;
-                }
+                // std::cout << "i cache search " << pipelineInfo.ifInst.PC << std::endl;
+                // bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
+                // // std::cout << "line263 "  << std::endl;
+                // if (!iHit) {
+                //     std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
+                //     numICacheStalls = iCache->config.missLatency;
+                //     // numICacheStalls = 5;
+                // }
                 // PC = PC + 4;
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
                 if (reachedIllegal && PC < 0x8000) {
