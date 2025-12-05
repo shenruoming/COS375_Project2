@@ -242,6 +242,7 @@ Status runCycles(uint64_t cycles) {
                     break;
                 }  else if (numICacheStalls > 0 && reachedIllegal) {
                     pipelineInfo.idInst = nop(BUBBLE);
+                    std::cout << "last line should come here"  << PC << std::endl;
                     numICacheStalls--;
                 }
 
