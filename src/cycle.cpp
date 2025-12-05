@@ -105,11 +105,11 @@ Status runCycles(uint64_t cycles) {
 
         // exception handling for illegal instruction 
         // Sarah moved this here
-        if (!pipelineInfo.idInst.isLegal) {
-            pipelineInfo.idInst = nop(SQUASHED);
-            reachedIllegal = true;
-            PC = 0x8000;
-        }
+        // if (!pipelineInfo.idInst.isLegal) {
+        //     pipelineInfo.idInst = nop(SQUASHED);
+        //     reachedIllegal = true;
+        //     PC = 0x8000;
+        // }
         
         // applies to load-use with stalling
         // load-use for R-type (load first, then use as an input register)
@@ -239,7 +239,6 @@ Status runCycles(uint64_t cycles) {
                     pipelineInfo.idInst = nop(SQUASHED);
                     reachedIllegal = true;
                     PC = 0x8000;
-                    break;
                 }
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
