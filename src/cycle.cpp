@@ -262,6 +262,7 @@ Status runCycles(uint64_t cycles) {
                     pipelineInfo.idInst = nop(BUBBLE);
                     std::cout << "last line should come here"  << PC << std::endl;
                     numICacheStalls--;
+                    break;
                 }
 
                 if (reachedIllegal && PC < 0x8000) {
@@ -286,9 +287,9 @@ Status runCycles(uint64_t cycles) {
                     // numICacheStalls = 5;
                 }
                 
-                if (!reachedIllegal) {
-                    PC = PC + 4;
-                }
+
+                PC = PC + 4;
+                
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
                 // if (reachedIllegal) {
                 //     if (PC >= 0x8000) {
