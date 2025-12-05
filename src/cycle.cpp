@@ -265,7 +265,7 @@ Status runCycles(uint64_t cycles) {
 
                 
                 // simulate ICache
-                if (pipelineInfo.idInst.isLegal) {
+                if (pipelineInfo.idInst.isLegal && !pipelineInfo.idInst.isHalt) {
                     std::cout << "i cache search " << pipelineInfo.ifInst.PC << std::endl;
                     bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
                     // std::cout << "line263 "  << std::endl;
