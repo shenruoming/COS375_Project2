@@ -80,7 +80,7 @@ Status runCycles(uint64_t cycles) {
             if (numICacheStalls > 0) {
                 numICacheStalls -= 1;
             }
-            // break;
+            break;
         }
 
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
