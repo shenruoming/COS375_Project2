@@ -258,7 +258,7 @@ Status runCycles(uint64_t cycles) {
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
 
-                if (numICacheStalls > 0 && reachedIllegal) {
+                if (numICacheStalls > 0 && reachedIllegal && PC < 0x8000) {
                     pipelineInfo.idInst = nop(BUBBLE);
                     std::cout << "last line should come here"  << PC << std::endl;
                     numICacheStalls--;
