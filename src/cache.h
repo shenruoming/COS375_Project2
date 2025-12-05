@@ -30,7 +30,7 @@ class Cache {
 private:
     uint64_t hits, misses;    
     CacheDataType type;
-    std::unordered_map<int, list<uint64_t>> cacheTable;
+    std::unordered_map<int, std::list<uint64_t>> cacheTable;
 
 public:
     CacheConfig config;
