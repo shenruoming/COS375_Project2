@@ -236,7 +236,7 @@ Status runCycles(uint64_t cycles) {
             } else {
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
-                if (numICacheStalls > 0) {
+                if (numICacheStalls > 0 && !reachedIllegal) {
                     pipelineInfo.idInst = nop(BUBBLE);
                     numICacheStalls--;
                     break;
@@ -280,9 +280,7 @@ Status runCycles(uint64_t cycles) {
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
                 if (reachedIllegal) {
                     if (PC >= 0x8000) {
-                        if (status != HALT) {
-                            status == HALT;
-                        }
+                        status == HALT;
                     } else {
                         PC = 0x8000;
                     }
