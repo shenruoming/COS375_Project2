@@ -147,25 +147,25 @@ Status runCycles(uint64_t cycles) {
             if (pipelineInfo.wbInst.opcode == OP_LOAD 
                 && pipelineInfo.idInst.opcode == OP_STORE 
                 && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
-                std::cout << "forwarding from WB to ID before executing ID for rs1 (load->store): "  << PC << std::endl;
+                // std::cout << "forwarding from WB to ID before executing ID for rs1 (load->store): "  << PC << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.memResult;
             }
             // also update dest reg of store if dependent on load
             if (pipelineInfo.wbInst.opcode == OP_LOAD 
                 && pipelineInfo.idInst.opcode == OP_STORE 
                 && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
-                std::cout << "forwarding from WB to ID before executing ID for rs2 (load->store): "  << PC << std::endl;
+                // std::cout << "forwarding from WB to ID before executing ID for rs2 (load->store): "  << PC << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.memResult;
             }
 
             if (pipelineInfo.wbInst.opcode == OP_LOAD 
                 && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
-                std::cout << "forwarding from WB to ID before executing ID for rs1 (load->add): "  << PC << std::endl;
+                // std::cout << "forwarding from WB to ID before executing ID for rs1 (load->add): "  << PC << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.memResult;
             }
             if (pipelineInfo.wbInst.opcode == OP_LOAD 
                 && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
-                std::cout << "forwarding from WB to ID before executing ID for rs2 (load->add): "  << PC << std::endl;
+                // std::cout << "forwarding from WB to ID before executing ID for rs2 (load->add): "  << PC << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.memResult;
             }
 
@@ -173,22 +173,22 @@ Status runCycles(uint64_t cycles) {
             // MAKE SURE HERE THAT WB INSTR OR MEM INSTR ISNT A BRANCH 
             // checking if register we need for execute was just calculated add -> smth -> add
             if (pipelineInfo.wbInst.opcode != OP_LOAD && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
-                std::cout << "forward from wb to ex for rs1: "  << pipelineInfo.wbInst.arithResult << std::endl;
+                // std::cout << "forward from wb to ex for rs1: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.arithResult;
             }
             if (pipelineInfo.wbInst.opcode != OP_LOAD && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
-                std::cout << "forward from wb to ex for rs2: "  << pipelineInfo.wbInst.arithResult << std::endl;
+                // std::cout << "forward from wb to ex for rs2: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 // std::cout << "should be here at t4 for t3: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.arithResult;
             }
             // R-type -> R-type, store, and load hopefully
             // checking if register we need for execute was just calculated add -> add
             if (pipelineInfo.memInst.opcode != OP_LOAD && pipelineInfo.memInst.rd == pipelineInfo.idInst.rs1) {
-                std::cout << "forward from mem to ex for rs1: "  << pipelineInfo.memInst.arithResult << std::endl;
+                // std::cout << "forward from mem to ex for rs1: "  << pipelineInfo.memInst.arithResult << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.memInst.arithResult;
             }
             if (pipelineInfo.memInst.opcode != OP_LOAD && pipelineInfo.memInst.rd == pipelineInfo.idInst.rs2) {
-                std::cout << "forward from mem to ex for rs2: "  << pipelineInfo.memInst.arithResult << std::endl;
+                // std::cout << "forward from mem to ex for rs2: "  << pipelineInfo.memInst.arithResult << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.memInst.arithResult;
             }
             // one cycle arith branch stal
@@ -243,7 +243,7 @@ Status runCycles(uint64_t cycles) {
                 } 
 
                 if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
-                    std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
+                    // std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
                     PC = pipelineInfo.idInst.nextPC;
                     pipelineInfo.idInst = nop(SQUASHED);
                 } else {
@@ -265,9 +265,9 @@ Status runCycles(uint64_t cycles) {
 
                 
                 // simulate ICache
-                std::cout << "line261 "  << std::endl;
+                std::cout << "i cache search " << pipelineInfo.ifInst.PC << std::endl;
                 bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
-                std::cout << "line263 "  << std::endl;
+                // std::cout << "line263 "  << std::endl;
                 if (!iHit) {
                     std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
                     numICacheStalls = iCache->config.missLatency;
