@@ -91,16 +91,16 @@ Status runCycles(uint64_t cycles) {
         pipelineInfo.memInst = simulator->simMEM(pipelineInfo.exInst);
 
         // simulate D-cache
-        // if (pipelineInfo.memInst.opcode == OP_LOAD || pipelineInfo.memInst.opcode == OP_STORE) {
-        //     CacheOperation op = CACHE_READ;
-        //     if (pipelineInfo.memInst.opcode == OP_STORE) {
-        //         op = CACHE_WRITE;
-        //     }
-        //     bool hit = dCache->access(pipelineInfo.memInst.PC, op);
-        //     if (!hit) {
-        //         numDCacheStalls = dCache->config.missLatency;
-        //     }
-        // }
+        if (pipelineInfo.memInst.opcode == OP_LOAD || pipelineInfo.memInst.opcode == OP_STORE) {
+            CacheOperation op = CACHE_READ;
+            if (pipelineInfo.memInst.opcode == OP_STORE) {
+                op = CACHE_WRITE;
+            }
+            bool hit = dCache->access(pipelineInfo.memInst.PC, op);
+            if (!hit) {
+                numDCacheStalls = dCache->config.missLatency;
+            }
+        }
 
         // exception handling for illegal instruction 
         // Sarah moved this here
