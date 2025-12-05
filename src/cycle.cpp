@@ -240,7 +240,10 @@ Status runCycles(uint64_t cycles) {
                     pipelineInfo.idInst = nop(BUBBLE);
                     numICacheStalls--;
                     break;
-                } 
+                }  else if (numICacheStalls > 0 && reachedIllegal) {
+                    pipelineInfo.idInst = nop(BUBBLE);
+                    numICacheStalls--;
+                }
 
                 if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
                     // std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
@@ -270,16 +273,16 @@ Status runCycles(uint64_t cycles) {
 
                 
                 // simulate ICache
-                if (pipelineInfo.idInst.isLegal && !pipelineInfo.idInst.isHalt) {
-                    std::cout << "i cache search " << pipelineInfo.ifInst.PC << std::endl;
-                    bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
-                    // std::cout << "line263 "  << std::endl;
-                    if (!iHit) {
-                        std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
-                        numICacheStalls = iCache->config.missLatency;
-                        // numICacheStalls = 5;
-                    }
+        
+                std::cout << "i cache search " << pipelineInfo.ifInst.PC << std::endl;
+                bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
+                // std::cout << "line263 "  << std::endl;
+                if (!iHit) {
+                    std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
+                    numICacheStalls = iCache->config.missLatency;
+                    // numICacheStalls = 5;
                 }
+                
                 if (!reachedIllegal) {
                     PC = PC + 4;
                 }
