@@ -13,7 +13,7 @@ using namespace std;
 static std::mt19937 generator(42);  // Fixed seed for deterministic results
 std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
-std::unordered_map<int, list<uint64_t>*> cacheTable;
+std::unordered_map<int, list<uint64_t>> cacheTable;
 int numOffsetBits;
 int numIndexBits;
 
@@ -38,38 +38,38 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
     if (cacheSet == cacheTable.end()) {
         misses += 1;
         list<uint64_t> set = {tag};
-        cacheTable.insert({index, &set});
+        cacheTable.insert({index, set});
         cout << "miss: "  << address << endl;
         return false;
     }
     cout << "line 44 in cache.cpp " << endl;
     auto set = cacheSet->second;
     cout << "line 46 in cache.cpp " << endl;
-    auto begin = set->begin();
-    cout << "line 49 " << *begin << endl;
-    auto end = set->end();
-    cout << "line 51 " << *end << endl;
-    auto element = std::find(set->begin(), set->end(), tag);
+    auto begin = set.begin();
+    auto end = set.end();
+    auto element = std::find(set.begin(), set.end(), tag);
     cout << "line 53 " << endl;
-    if (element == set->end()) {
+    if (element == set.end()) {
         misses += 1;
-        if (set->size() < config.ways) {
-            set->push_back(tag);
+        if (set.size() < config.ways) {
+            set.push_back(tag);
         } else {
-            cout << "cache set is full, removing: "  << set->front() << endl;
-            set->pop_front();
-            set->push_back(tag);
+            cout << "cache set is full, removing: "  << set.front() << endl;
+            set.pop_front();
+            set.push_back(tag);
         } 
+        cacheTable[index] = set;
         cout << "miss: "  << address << endl;
         return false;
     } else {
         cout << "line line 61 in cache.cpp " << endl;
-        set->remove(tag);
+        set.remove(tag);
         cout << "line line 63 in cache.cpp " << endl;
-        set->push_back(tag);
+        set.push_back(tag);
         cout << "line line 65 in cache.cpp " << endl;
         hits += 1;
         cout << "hit: "  << address << endl;
+        cacheTable[index] = set;
         return true;
     }
 }
