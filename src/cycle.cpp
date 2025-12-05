@@ -235,6 +235,12 @@ Status runCycles(uint64_t cycles) {
                 // "refresh" the branch's next PC
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
             } else {
+                if (!pipelineInfo.idInst.isLegal) {
+                    pipelineInfo.idInst = nop(SQUASHED);
+                    reachedIllegal = true;
+                    PC = 0x8000;
+                    break;
+                }
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
                 if (numICacheStalls > 0 && !reachedIllegal) {
@@ -259,7 +265,7 @@ Status runCycles(uint64_t cycles) {
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
 
-                if (numICacheStalls > 0 && reachedIllegal && PC >= 0x8000 && pipelineInfo.idInst.status != SQUASHED) {
+                if (numICacheStalls > 0 && reachedIllegal && PC >= 0x8000) {
                     pipelineInfo.idInst = nop(BUBBLE);
                     std::cout << "last line should come here"  << PC << std::endl;
                     numICacheStalls--;
