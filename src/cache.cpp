@@ -13,7 +13,6 @@ using namespace std;
 static std::mt19937 generator(42);  // Fixed seed for deterministic results
 std::uniform_real_distribution<double> distribution(0.0, 1.0);
 
-std::unordered_map<int, list<uint64_t>> cacheTable;
 int numOffsetBits;
 int numIndexBits;
 
@@ -25,6 +24,7 @@ Cache::Cache(CacheConfig configParam, CacheDataType cacheType) : config(configPa
     type = cacheType;
     numOffsetBits = log2(config.blockSize); //4
     numIndexBits = log2(numSets); //6
+
 }
 
 // Access method definition
