@@ -281,10 +281,10 @@ Status runCycles(uint64_t cycles) {
                 if (reachedIllegal && PC < 0x8000) {
                     PC = 0x8000;
                     // update status??
-                    if (status != HALT) {
-                        // status = ERROR;
-                        status = HALT;
-                    }
+                    // if (status != HALT) {
+                    //     // status = ERROR;
+                    //     status = HALT;
+                    // }
                 } else {
                     PC = PC + 4;
                 }
