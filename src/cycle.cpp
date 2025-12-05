@@ -280,7 +280,7 @@ Status runCycles(uint64_t cycles) {
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
                 if (reachedIllegal) {
                     if (PC >= 0x8000) {
-                        status == HALT;
+                        status = HALT;
                     } else {
                         PC = 0x8000;
                     }
