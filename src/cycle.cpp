@@ -257,6 +257,10 @@ Status runCycles(uint64_t cycles) {
                     }
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
+
+                if (reachedIllegal && PC < 0x8000) {
+                    PC = 0x8000;
+                }
                 
 
                 pipelineInfo.ifInst = simulator->simIF(PC);
@@ -276,17 +280,17 @@ Status runCycles(uint64_t cycles) {
                         // numICacheStalls = 5;
                     }
                 }
-                // PC = PC + 4;
+                PC = PC + 4;
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
-                if (reachedIllegal) {
-                    if (PC >= 0x8000) {
-                        status = HALT;
-                    } else {
-                        PC = 0x8000;
-                    }
-                } else {
-                    PC = PC + 4;
-                }
+                // if (reachedIllegal) {
+                //     if (PC >= 0x8000) {
+                //         status = HALT;
+                //     } else {
+                //         PC = 0x8000;
+                //     }
+                // } else {
+                //     PC = PC + 4;
+                // }
                 
             }
 
