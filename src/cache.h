@@ -4,6 +4,7 @@
 #include <vector>
 #include <cmath>
 #include "Utilities.h"
+#include <list>
 
 struct CacheConfig {
     // Cache size in bytes.
