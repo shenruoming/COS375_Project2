@@ -310,7 +310,7 @@ Status runCycles(uint64_t cycles) {
 // status tells you to HALT or ERROR out
 Status runTillHalt() {
     std::cout << "is cache working "  << iCache->config.missLatency << std::endl;
-    uint64_t addresses[8] = {0x0, 0x4, 0x8, 0x0000F0001, 0xF0000000F001, 0x000FF0001, 0x0, 0xF0000000F001};
+    uint64_t addresses[8] = {0x0, 0x4, 0x8, 0x0000F0001, 0x000F0021, 0x000F0001, 0x0, 0x000F0021};
     for (int i = 0; i < 8; i++) {
         iCache->access(addresses[i], CACHE_READ);
     }
