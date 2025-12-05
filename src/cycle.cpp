@@ -98,6 +98,7 @@ Status runCycles(uint64_t cycles) {
             }
             bool hit = dCache->access(pipelineInfo.memInst.PC, op);
             if (!hit) {
+                std::cout << "d cache miss: "  << PC << std::endl;
                 numDCacheStalls = dCache->config.missLatency;
             }
         }
