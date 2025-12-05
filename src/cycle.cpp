@@ -108,6 +108,7 @@ Status runCycles(uint64_t cycles) {
         if (!pipelineInfo.idInst.isLegal) {
             pipelineInfo.idInst = nop(SQUASHED);
             reachedIllegal = true;
+            PC = 0x8000;
         }
         
         // applies to load-use with stalling
@@ -267,9 +268,9 @@ Status runCycles(uint64_t cycles) {
                     }
                 }
 
-                if (reachedIllegal && PC < 0x8000) {
-                    PC = 0x8000;
-                }
+                // if (reachedIllegal && PC < 0x8000) {
+                //     PC = 0x8000;
+                // }
                 
 
                 pipelineInfo.ifInst = simulator->simIF(PC);
