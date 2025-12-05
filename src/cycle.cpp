@@ -280,7 +280,9 @@ Status runCycles(uint64_t cycles) {
                         // numICacheStalls = 5;
                     }
                 }
-                PC = PC + 4;
+                if (!reachedIllegal) {
+                    PC = PC + 4;
+                }
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
                 // if (reachedIllegal) {
                 //     if (PC >= 0x8000) {
