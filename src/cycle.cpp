@@ -288,7 +288,9 @@ Status runCycles(uint64_t cycles) {
                     std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
                     numICacheStalls = iCache->config.missLatency;
                     // numICacheStalls = 5;
-                }
+                } else if (reachedIllegal) {
+                    reachedIllegal = false;
+                } 
                 
                 if (!reachedIllegal) {
                     PC = PC + 4;
