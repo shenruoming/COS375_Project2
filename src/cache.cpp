@@ -21,10 +21,10 @@ int numIndexBits;
 Cache::Cache(CacheConfig configParam, CacheDataType cacheType) : config(configParam) {
     // Here you can initialize other cache-specific attributes
     // For instance, if you had cache tables or other structures, initialize them here
-    uint64_t numSets = config.cacheSize / config.blockSize / config.ways;
+    uint64_t numSets = config.cacheSize / config.blockSize / config.ways; 
     type = cacheType;
-    numOffsetBits = log2(config.blockSize);
-    numIndexBits = log2(numSets);
+    numOffsetBits = log2(config.blockSize); //4
+    numIndexBits = log2(numSets); //6
 }
 
 // Access method definition
@@ -46,9 +46,9 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
     auto set = cacheSet->second;
     cout << "line 46 in cache.cpp " << endl;
     auto begin = set->begin();
-    cout << "line 49 " << endl;
+    cout << "line 49 " << begin* << endl;
     auto end = set->end();
-    cout << "line 51 " << endl;
+    cout << "line 51 " << end* << endl;
     auto element = std::find(set->begin(), set->end(), tag);
     cout << "line 53 " << endl;
     if (element == set->end()) {
