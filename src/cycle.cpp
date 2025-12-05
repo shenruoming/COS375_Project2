@@ -105,10 +105,10 @@ Status runCycles(uint64_t cycles) {
 
         // exception handling for illegal instruction 
         // Sarah moved this here
-        // if (!pipelineInfo.idInst.isLegal) {
-        //     pipelineInfo.idInst = nop(SQUASHED);
-        //     reachedIllegal = true;
-        // }
+        if (!pipelineInfo.idInst.isLegal) {
+            pipelineInfo.idInst = nop(SQUASHED);
+            reachedIllegal = true;
+        }
         
         // applies to load-use with stalling
         // load-use for R-type (load first, then use as an input register)
@@ -257,23 +257,7 @@ Status runCycles(uint64_t cycles) {
                     }
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
-
-                // exception handling for illegal instruction 
-                // Sarah moved this here
-                if (!pipelineInfo.idInst.isLegal) {
-                    // pipelineInfo.idInst = nop(SQUASHED);
-                    reachedIllegal = true;
-
-                    if (PC < 0x8000) {
-                        PC = 0x8000;
-                        // update status??
-                        if (status != HALT) {
-                            // status = ERROR;
-                            status = HALT;
-                        }
-                        break;
-                    }
-                }
+                
 
                 pipelineInfo.ifInst = simulator->simIF(PC);
                 if (pipelineInfo.idInst.opcode == OP_BRANCH) {
@@ -292,18 +276,18 @@ Status runCycles(uint64_t cycles) {
                         // numICacheStalls = 5;
                     }
                 }
-                PC = PC + 4;
+                // PC = PC + 4;
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
-                // if (reachedIllegal && PC < 0x8000) {
-                //     PC = 0x8000;
-                //     // update status??
-                //     if (status != HALT) {
-                //         // status = ERROR;
-                //         status = HALT;
-                //     }
-                // } else {
-                //     PC = PC + 4;
-                // }
+                if (reachedIllegal && PC < 0x8000) {
+                    PC = 0x8000;
+                    // update status??
+                    if (status != HALT) {
+                        // status = ERROR;
+                        status = HALT;
+                    }
+                } else {
+                    PC = PC + 4;
+                }
                 
             }
 
