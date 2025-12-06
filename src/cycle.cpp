@@ -289,7 +289,7 @@ Status runCycles(uint64_t cycles) {
                     numICacheStalls = iCache->config.missLatency;
                     // numICacheStalls = 5;
                 } else if (reachedIllegal) {
-                    reachedIllegal == false;
+                    reachedIllegal = false;
                 } 
                 
                 if (!reachedIllegal) {
