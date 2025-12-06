@@ -31,42 +31,42 @@ Cache::Cache(CacheConfig configParam, CacheDataType cacheType) : config(configPa
 bool Cache::access(uint64_t address, CacheOperation readWrite) {
     uint64_t index = getIndex(address);
     cout << "address: "  << address << endl;
-    cout << "index: "  << index << endl;
+    // cout << "index: "  << index << endl;
     uint64_t tag = getTag(address);
     auto cacheSet = cacheTable.find(index);
-    cout << "getTag: "  << tag << endl;
+    // cout << "getTag: "  << tag << endl;
     if (cacheSet == cacheTable.end()) {
         misses += 1;
         list<uint64_t> set = {tag};
         cacheTable.insert({index, set});
-        cout << "miss: "  << address << endl;
+        // cout << "miss: "  << address << endl;
         return false;
     }
-    cout << "line 44 in cache.cpp " << endl;
+    // cout << "line 44 in cache.cpp " << endl;
     auto set = cacheSet->second;
-    cout << "line 46 in cache.cpp " << endl;
+    // cout << "line 46 in cache.cpp " << endl;
     auto element = std::find(set.begin(), set.end(), tag);
-    cout << "line 53 " << endl;
+    // cout << "line 53 " << endl;
     if (element == set.end()) {
         misses += 1;
         if (set.size() < config.ways) {
             set.push_back(tag);
         } else {
-            cout << "cache set is full, removing: "  << set.front() << endl;
+            // cout << "cache set is full, removing: "  << set.front() << endl;
             set.pop_front();
             set.push_back(tag);
         } 
         cacheTable[index] = set;
-        cout << "miss: "  << address << endl;
+        // cout << "miss: "  << address << endl;
         return false;
     } else {
-        cout << "line line 61 in cache.cpp " << endl;
+        // cout << "line line 61 in cache.cpp " << endl;
         set.remove(tag);
-        cout << "line line 63 in cache.cpp " << endl;
+        // cout << "line line 63 in cache.cpp " << endl;
         set.push_back(tag);
-        cout << "line line 65 in cache.cpp " << endl;
+        // cout << "line line 65 in cache.cpp " << endl;
         hits += 1;
-        cout << "hit: "  << address << endl;
+        // cout << "hit: "  << address << endl;
         cacheTable[index] = set;
         return true;
     }
