@@ -141,7 +141,7 @@ Status runCycles(uint64_t cycles) {
             pipelineInfo.exInst = nop(BUBBLE);
         } else {
             // delete maybe: "refresh" id instruction registers in case of long cache stalls
-            // pipelineInfo.idInst = simulator->simID(pipelineInfo.idInst); 
+            pipelineInfo.idInst = simulator->simID(pipelineInfo.idInst); 
 
             // NOP in between load and store, 
             if (pipelineInfo.wbInst.opcode == OP_LOAD 
