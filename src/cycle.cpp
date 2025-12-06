@@ -18,6 +18,7 @@ static uint64_t cycleCount = 0;
 static uint64_t PC = 0;
 
 static bool reachedIllegal = false;
+static bool firstIllegal = false;
 static int numDCacheStalls = 0;
 static int numICacheStalls = 0;
 
@@ -108,6 +109,7 @@ Status runCycles(uint64_t cycles) {
         if (!pipelineInfo.idInst.isLegal) {
             pipelineInfo.idInst = nop(SQUASHED);
             reachedIllegal = true;
+            firstIllegal = true;
             PC = 0x8000;
         }
         
@@ -260,12 +262,15 @@ Status runCycles(uint64_t cycles) {
                 }
 
                 if (numICacheStalls > 0 && reachedIllegal && PC >= 0x8000) {
-                    pipelineInfo.idInst = nop(BUBBLE);
+                    if (!firstIllegal) {
+                        pipelineInfo.idInst = nop(BUBBLE);
+                    }
                     std::cout << "last line should come here"  << PC << std::endl;
                     numICacheStalls--;
                     if (numICacheStalls == 0) {
                         reachedIllegal = false;
                     }
+                    firstIllegal = false;
                 }
 
                 // if (reachedIllegal && PC < 0x8000) {
