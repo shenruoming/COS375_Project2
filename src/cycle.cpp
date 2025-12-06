@@ -21,6 +21,7 @@ static bool reachedIllegal = false;
 static int numDCacheStalls = 0;
 static int numICacheStalls = 0;
 static bool inBranch = false;
+static bool changedExceptionControl = false;
 static uint64_t correctBranchPC = 0;
 
 /**TODO: Implement pipeline simulation for the RISCV machine in this file.
@@ -237,6 +238,10 @@ Status runCycles(uint64_t cycles) {
                 if (!pipelineInfo.idInst.isLegal) {
                     pipelineInfo.idInst = nop(SQUASHED);
                     reachedIllegal = true;
+                    if (!changedExceptionControl) {
+                        changedExceptionControl = true;
+                        numICacheStalls = 0;
+                    }
                 }
 
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
