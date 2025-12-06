@@ -298,7 +298,6 @@ Status runCycles(uint64_t cycles) {
                     reachedIllegal = false;
                 } 
 
-                if ()
                 
                 if (!reachedIllegal) {
                     PC = PC + 4;
