@@ -326,17 +326,17 @@ Status runCycles(uint64_t cycles) {
 // run till halt (call runCycles() with cycles == 1 each time) until
 // status tells you to HALT or ERROR out
 Status runTillHalt() {
-    uint64_t addresses[18] = {0x0, 0x4, 0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24,0x28,0x2c, 0x30, 0x34, 0x38, 0x0000F0001,  0x000FF0001, 0x0};
-    for (int i = 0; i < 18; i++) {
-        iCache->access(addresses[i], CACHE_READ);
-    }
-    return SUCCESS;
-    // Status status;
-    // while (true) {
-    //     status = static_cast<Status>(runCycles(1));
-    //     if (status == HALT) break;
+    // uint64_t addresses[18] = {0x0, 0x4, 0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24,0x28,0x2c, 0x30, 0x34, 0x38, 0x0000F0001,  0x000FF0001, 0x0};
+    // for (int i = 0; i < 18; i++) {
+    //     iCache->access(addresses[i], CACHE_READ);
     // }
-    // return status;
+    // return SUCCESS;
+    Status status;
+    while (true) {
+        status = static_cast<Status>(runCycles(1));
+        if (status == HALT) break;
+    }
+    return status;
 }
 
 // dump the state of the simulator
