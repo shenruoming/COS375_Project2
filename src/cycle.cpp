@@ -255,9 +255,10 @@ Status runCycles(uint64_t cycles) {
                         pipelineInfo.ifInst.status = NORMAL;
                     }
                     // after raising an illegal instruction exception, squash future instructions
-                    // if (reachedIllegal) {
-                    //     pipelineInfo.ifInst = nop(SQUASHED);
-                    // }
+                    if (reachedIllegal) {
+                        pipelineInfo.ifInst = nop(SQUASHED);
+                        reachedIllegal = false;
+                    }
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
 
