@@ -105,11 +105,11 @@ Status runCycles(uint64_t cycles) {
 
         // exception handling for illegal instruction 
         // Sarah moved this here
-        // if (!pipelineInfo.idInst.isLegal) {
-        //     pipelineInfo.idInst = nop(SQUASHED);
-        //     reachedIllegal = true;
-        //     PC = 0x8000;
-        // }
+        if (!pipelineInfo.idInst.isLegal) {
+            pipelineInfo.idInst = nop(SQUASHED);
+            reachedIllegal = true;
+            PC = 0x8000;
+        }
         
         // applies to load-use with stalling
         // load-use for R-type (load first, then use as an input register)
@@ -235,11 +235,6 @@ Status runCycles(uint64_t cycles) {
                 // "refresh" the branch's next PC
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
             } else {
-                if (!pipelineInfo.idInst.isLegal) {
-                    pipelineInfo.idInst = nop(SQUASHED);
-                    reachedIllegal = true;
-                    PC = 0x8000;
-                }
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
                 if (numICacheStalls > 0 && !reachedIllegal) {
@@ -257,7 +252,6 @@ Status runCycles(uint64_t cycles) {
                     if (!pipelineInfo.ifInst.isNop) {
                         pipelineInfo.ifInst.status = NORMAL;
                     }
-
                     // after raising an illegal instruction exception, squash future instructions
                     if (reachedIllegal) {
                         pipelineInfo.ifInst = nop(SQUASHED);
@@ -265,7 +259,7 @@ Status runCycles(uint64_t cycles) {
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
 
-                if (numICacheStalls > 0 && PC >= 0x8000) {
+                if (numICacheStalls > 0 && reachedIllegal && PC >= 0x8000) {
                     pipelineInfo.idInst = nop(BUBBLE);
                     std::cout << "last line should come here"  << PC << std::endl;
                     numICacheStalls--;
@@ -298,6 +292,7 @@ Status runCycles(uint64_t cycles) {
                     reachedIllegal = false;
                 } 
                 
+                // this should probably be if we are currently in a stall or not
                 if (!reachedIllegal) {
                     PC = PC + 4;
                 }
