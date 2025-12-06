@@ -452,11 +452,11 @@ Simulator::Instruction Simulator::simEX(Simulator::Instruction inst) {
     // throw std::runtime_error("simEX not implemented yet"); // TODO implement EX
     inst = simArithLogic(inst);
     // cout << "[Simulator] reached execute: " << endl;
-    if (inst.PC == 0x24) {
-        cout << "execute arith result for PC 0x24: " << inst.arithResult << endl;
-        cout << "execute rs1 for PC 0x24: " << inst.op1Val << endl;
-        cout << "execute rs2 for PC 0x24: " << inst.op2Val << endl;
-    }
+    // if (inst.PC == 0x24) {
+    //     cout << "execute arith result for PC 0x24: " << inst.arithResult << endl;
+    //     cout << "execute rs1 for PC 0x24: " << inst.op1Val << endl;
+    //     cout << "execute rs2 for PC 0x24: " << inst.op2Val << endl;
+    // }
     return simAddrGen(inst);
 }
 

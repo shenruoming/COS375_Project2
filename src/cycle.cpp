@@ -18,6 +18,7 @@ static uint64_t cycleCount = 0;
 static uint64_t PC = 0;
 
 static bool reachedIllegal = false;
+static bool reachedHalt = false;
 static int numDCacheStalls = 0;
 static int numICacheStalls = 0;
 static bool inBranch = false;
@@ -268,7 +269,7 @@ Status runCycles(uint64_t cycles) {
 
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                     // after raising an illegal instruction exception, squash future instructions
-                    if (reachedIllegal && !pipelineInfo.idInst.isHalt && !pipelineInfo.idInst.isNop) {
+                    if (reachedIllegal && !pipelineInfo.idInst.isHalt && !pipelineInfo.idInst.isNop && reachedHalt) {
                         pipelineInfo.idInst = nop(SQUASHED);
                     }
                 }
@@ -290,6 +291,10 @@ Status runCycles(uint64_t cycles) {
                     PC = 0x8000;
                     reachedIllegal = true;
                     numICacheStalls = 0;
+                }
+                if (pipelineInfo.idInst.isHalt) {
+                    reachedIllegal = false;
+                    reachedHalt = true;
                 }
                 
             }
