@@ -235,20 +235,13 @@ Status runCycles(uint64_t cycles) {
                 // "refresh" the branch's next PC
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
             } else {
-                if (!pipelineInfo.idInst.isLegal) {
-                    pipelineInfo.idInst = nop(SQUASHED);
-                    reachedIllegal = true;
-                    PC = 0x8000;
-                }
+                
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
                 if (numICacheStalls > 0 && !reachedIllegal) {
                     pipelineInfo.idInst = nop(BUBBLE);
                     numICacheStalls--;
-                    break;
-                } 
-
-                if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
+                } else if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
                     // std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
                     PC = pipelineInfo.idInst.nextPC;
                     pipelineInfo.idInst = nop(SQUASHED);
@@ -257,60 +250,72 @@ Status runCycles(uint64_t cycles) {
                     if (!pipelineInfo.ifInst.isNop) {
                         pipelineInfo.ifInst.status = NORMAL;
                     }
+
                     // after raising an illegal instruction exception, squash future instructions
                     if (reachedIllegal) {
                         pipelineInfo.ifInst = nop(SQUASHED);
                     }
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
-                }
 
-                if (numICacheStalls > 0 && reachedIllegal && PC >= 0x8000) {
-                    pipelineInfo.idInst = nop(BUBBLE);
-                    std::cout << "last line should come here"  << PC << std::endl;
-                    numICacheStalls--;
-                    if (numICacheStalls == 0) {
+                    pipelineInfo.ifInst = simulator->simIF(PC);
+                    if (pipelineInfo.idInst.opcode == OP_BRANCH) {
+                        pipelineInfo.ifInst.status = SPECULATIVE;
+                    }
+
+                    std::cout << "i cache search " << pipelineInfo.ifInst.PC << std::endl;
+                    bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
+                    // std::cout << "line263 "  << std::endl;
+                    if (!iHit) {
+                        std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
+                        numICacheStalls = iCache->config.missLatency;
+                        // numICacheStalls = 5;
+                    } else if (reachedIllegal) {
                         reachedIllegal = false;
+                    } 
+
+                    if (!pipelineInfo.idInst.isLegal) {
+                        pipelineInfo.idInst = nop(SQUASHED);
+                        reachedIllegal = true;
+                        PC = 0x8000;
+                        numICacheStalls = 0;
+                    } else if (numICacheStalls == 0) {
+                        PC = PC + 4;
                     }
                 }
 
-                // if (reachedIllegal && PC < 0x8000) {
-                //     PC = 0x8000;
+                // if (numICacheStalls > 0 && reachedIllegal && PC >= 0x8000) {
+                //     pipelineInfo.idInst = nop(BUBBLE);
+                //     std::cout << "last line should come here"  << PC << std::endl;
+                //     numICacheStalls--;
                 // }
                 
-
-                pipelineInfo.ifInst = simulator->simIF(PC);
-                if (pipelineInfo.idInst.opcode == OP_BRANCH) {
-                    pipelineInfo.ifInst.status = SPECULATIVE;
-                }
+                // pipelineInfo.ifInst = simulator->simIF(PC);
+                // if (pipelineInfo.idInst.opcode == OP_BRANCH) {
+                //     pipelineInfo.ifInst.status = SPECULATIVE;
+                // }
 
                 
-                // simulate ICache
+                // // simulate ICache
         
-                std::cout << "i cache search " << pipelineInfo.ifInst.PC << std::endl;
-                bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
-                // std::cout << "line263 "  << std::endl;
-                if (!iHit) {
-                    std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
-                    numICacheStalls = iCache->config.missLatency;
-                    // numICacheStalls = 5;
-                } else if (reachedIllegal) {
-                    reachedIllegal = false;
-                } 
-                
-                if (!reachedIllegal) {
-                    PC = PC + 4;
-                }
-                // exception handling: jump to address 0x8000 after reaching first illegal instruction
-                // if (reachedIllegal) {
-                //     if (PC >= 0x8000) {
-                //         status = HALT;
-                //     } else {
-                //         PC = 0x8000;
-                //     }
-                // } else {
+                // std::cout << "i cache search " << pipelineInfo.ifInst.PC << std::endl;
+                // bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
+                // // std::cout << "line263 "  << std::endl;
+                // if (!iHit) {
+                //     std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
+                //     numICacheStalls = iCache->config.missLatency;
+                //     // numICacheStalls = 5;
+                // } else if (reachedIllegal) {
+                //     reachedIllegal = false;
+                // } 
+
+                // if (!pipelineInfo.idInst.isLegal) {
+                //     pipelineInfo.idInst = nop(SQUASHED);
+                //     reachedIllegal = true;
+                //     PC = 0x8000;
+                //     numICacheStalls = 0;
+                // } else if (numICacheStalls == 0) {
                 //     PC = PC + 4;
                 // }
-                
             }
 
         }
