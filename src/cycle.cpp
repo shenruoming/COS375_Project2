@@ -246,7 +246,10 @@ Status runCycles(uint64_t cycles) {
                 //     break;
                 // }
 
-                
+                if (inBranch) {
+                    simulator->simNextPCResolution(pipelineInfo.idInst);
+                    correctBranchPC = pipelineInfo.idInst.nextPC;
+                }
                 if (inBranch && correctBranchPC != pipelineInfo.ifInst.PC) {
                     std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
                     PC = correctBranchPC;
@@ -267,7 +270,6 @@ Status runCycles(uint64_t cycles) {
                 if (pipelineInfo.idInst.opcode == OP_BRANCH) {
                     pipelineInfo.ifInst.status = SPECULATIVE;
                     inBranch = true;
-                    correctBranchPC = pipelineInfo.idInst.nextPC;
                 }
 
                 // simulate ICache
