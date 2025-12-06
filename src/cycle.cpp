@@ -234,10 +234,10 @@ Status runCycles(uint64_t cycles) {
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
             } else {
                 // exception handling for illegal instruction
-                // if (!pipelineInfo.idInst.isLegal) {
-                //     pipelineInfo.idInst = nop(SQUASHED);
-                //     reachedIllegal = true;
-                // }
+                if (!pipelineInfo.idInst.isLegal) {
+                    pipelineInfo.idInst = nop(SQUASHED);
+                    reachedIllegal = true;
+                }
 
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
@@ -259,11 +259,12 @@ Status runCycles(uint64_t cycles) {
                     if (!pipelineInfo.ifInst.isNop) {
                         pipelineInfo.ifInst.status = NORMAL;
                     }
-                    // after raising an illegal instruction exception, squash future instructions
-                    // if (reachedIllegal) {
-                    //     pipelineInfo.ifInst = nop(SQUASHED);
-                    // }
+
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
+                    // after raising an illegal instruction exception, squash future instructions
+                    if (reachedIllegal && !pipelineInfo.idInst.isHalt) {
+                        pipelineInfo.idInst = nop(SQUASHED);
+                    }
                 }
                 inBranch = false;
                 pipelineInfo.ifInst = simulator->simIF(PC);
@@ -277,17 +278,13 @@ Status runCycles(uint64_t cycles) {
                 if (!iHit) {
                     numICacheStalls = iCache->config.missLatency + 1;
                 }
-                PC = PC + 4;
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
-                // if (reachedIllegal && PC < 0x8000) {
-                //     PC = 0x8000;
-                //     // update status??
-                //     if (status != HALT) {
-                //         status = ERROR;
-                //     }
-                // } else {
-                //     PC = PC + 4;
-                // }
+                if (reachedIllegal) {
+                    PC = 0x8000;
+                    reachedIllegal = false;
+                } else {
+                    PC = PC + 4;
+                }
                 
             }
 
