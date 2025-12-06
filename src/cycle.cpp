@@ -241,10 +241,10 @@ Status runCycles(uint64_t cycles) {
 
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
-                if (numICacheStalls > 0) {
-                    pipelineInfo.idInst = nop(BUBBLE);
-                    break;
-                }
+                // if (numICacheStalls > 0) {
+                //     pipelineInfo.idInst = nop(BUBBLE);
+                //     break;
+                // }
 
                 
                 if (inBranch && correctBranchPC != pipelineInfo.ifInst.PC) {
