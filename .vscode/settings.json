@@ -49,6 +49,10 @@
         "variant": "cpp",
         "vector": "cpp",
         "algorithm": "cpp",
-        "list": "cpp"
+        "__threading_support": "cpp",
+        "cstddef": "cpp",
+        "list": "cpp",
+        "ostream": "cpp",
+        "tuple": "cpp"
     }
 }
