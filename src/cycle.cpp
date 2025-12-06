@@ -235,13 +235,13 @@ Status runCycles(uint64_t cycles) {
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
             } else {
                 // exception handling for illegal instruction
-                if (!pipelineInfo.idInst.isLegal) {
+                if (reachedIllegal) {
                     pipelineInfo.idInst = nop(SQUASHED);
-                    reachedIllegal = true;
-                    if (!changedExceptionControl) {
-                        changedExceptionControl = true;
-                        numICacheStalls = 0;
-                    }
+                    // reachedIllegal = true;
+                    // if (!changedExceptionControl) {
+                    //     changedExceptionControl = true;
+                    //     numICacheStalls = 0;
+                    // }
                 }
 
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
@@ -249,12 +249,6 @@ Status runCycles(uint64_t cycles) {
                 if (numICacheStalls > 0) {
                     pipelineInfo.idInst = nop(BUBBLE);
                     break;
-                }
-
-                if (reachedIllegal) {
-                    PC = 0x8000;
-                    reachedIllegal = false;
-                    inBranch = false;
                 }
 
                 if (inBranch) {
@@ -292,12 +286,12 @@ Status runCycles(uint64_t cycles) {
                 }
                 PC = PC + 4;
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
-                // if (reachedIllegal) {
-                //     PC = 0x8000;
-                //     reachedIllegal = false;
-                // } else {
-                //     PC = PC + 4;
-                // }
+                if (!pipelineInfo.idInst.isLegal) {
+                    PC = 0x8000;
+                    reachedIllegal = true;
+                } else {
+                    PC = PC + 4;
+                }
                 
             }
 
