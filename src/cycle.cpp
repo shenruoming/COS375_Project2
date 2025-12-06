@@ -289,6 +289,7 @@ Status runCycles(uint64_t cycles) {
                 if (!pipelineInfo.idInst.isLegal) {
                     PC = 0x8000;
                     reachedIllegal = true;
+                    numICacheStalls = 0;
                 }
                 
             }
