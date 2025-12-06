@@ -242,7 +242,7 @@ Status runCycles(uint64_t cycles) {
                 }
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
-                if (numICacheStalls > 0 && PC <= 0x8000) {
+                if (numICacheStalls > 0 && !reachedIllegal) {
                     pipelineInfo.idInst = nop(BUBBLE);
                     numICacheStalls--;
                     break;
@@ -298,6 +298,7 @@ Status runCycles(uint64_t cycles) {
                     reachedIllegal = false;
                 } 
 
+                if ()
                 
                 if (!reachedIllegal) {
                     PC = PC + 4;
