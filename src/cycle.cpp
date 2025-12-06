@@ -235,13 +235,20 @@ Status runCycles(uint64_t cycles) {
                 // "refresh" the branch's next PC
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
             } else {
-                
+                if (!pipelineInfo.idInst.isLegal) {
+                    pipelineInfo.idInst = nop(SQUASHED);
+                    reachedIllegal = true;
+                    PC = 0x8000;
+                }
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
-                if (numICacheStalls > 0 && !reachedIllegal) {
+                if (numICacheStalls > 0 && PC <= 0x8000) {
                     pipelineInfo.idInst = nop(BUBBLE);
                     numICacheStalls--;
-                } else if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
+                    break;
+                } 
+
+                if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
                     // std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
                     PC = pipelineInfo.idInst.nextPC;
                     pipelineInfo.idInst = nop(SQUASHED);
@@ -258,12 +265,20 @@ Status runCycles(uint64_t cycles) {
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
 
-                // if (numICacheStalls > 0 && reachedIllegal && PC >= 0x8000) {
-                //     pipelineInfo.idInst = nop(BUBBLE);
-                //     std::cout << "last line should come here"  << PC << std::endl;
-                //     numICacheStalls--;
+                if (numICacheStalls > 0 && PC >= 0x8000) {
+                    pipelineInfo.idInst = nop(BUBBLE);
+                    std::cout << "last line should come here"  << PC << std::endl;
+                    numICacheStalls--;
+                    if (numICacheStalls == 0) {
+                        reachedIllegal = false;
+                    }
+                }
+
+                // if (reachedIllegal && PC < 0x8000) {
+                //     PC = 0x8000;
                 // }
                 
+
                 pipelineInfo.ifInst = simulator->simIF(PC);
                 if (pipelineInfo.idInst.opcode == OP_BRANCH) {
                     pipelineInfo.ifInst.status = SPECULATIVE;
@@ -283,14 +298,22 @@ Status runCycles(uint64_t cycles) {
                     reachedIllegal = false;
                 } 
 
-                if (!pipelineInfo.idInst.isLegal) {
-                    pipelineInfo.idInst = nop(SQUASHED);
-                    reachedIllegal = true;
-                    PC = 0x8000;
-                    numICacheStalls = 0;
-                } else if (numICacheStalls == 0) {
+                if ()
+                
+                if (!reachedIllegal) {
                     PC = PC + 4;
                 }
+                // exception handling: jump to address 0x8000 after reaching first illegal instruction
+                // if (reachedIllegal) {
+                //     if (PC >= 0x8000) {
+                //         status = HALT;
+                //     } else {
+                //         PC = 0x8000;
+                //     }
+                // } else {
+                //     PC = PC + 4;
+                // }
+                
             }
 
         }
