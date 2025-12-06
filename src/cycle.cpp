@@ -256,31 +256,6 @@ Status runCycles(uint64_t cycles) {
                         pipelineInfo.ifInst = nop(SQUASHED);
                     }
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
-
-                    pipelineInfo.ifInst = simulator->simIF(PC);
-                    if (pipelineInfo.idInst.opcode == OP_BRANCH) {
-                        pipelineInfo.ifInst.status = SPECULATIVE;
-                    }
-
-                    std::cout << "i cache search " << pipelineInfo.ifInst.PC << std::endl;
-                    bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
-                    // std::cout << "line263 "  << std::endl;
-                    if (!iHit) {
-                        std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
-                        numICacheStalls = iCache->config.missLatency;
-                        // numICacheStalls = 5;
-                    } else if (reachedIllegal) {
-                        reachedIllegal = false;
-                    } 
-
-                    if (!pipelineInfo.idInst.isLegal) {
-                        pipelineInfo.idInst = nop(SQUASHED);
-                        reachedIllegal = true;
-                        PC = 0x8000;
-                        numICacheStalls = 0;
-                    } else if (numICacheStalls == 0) {
-                        PC = PC + 4;
-                    }
                 }
 
                 // if (numICacheStalls > 0 && reachedIllegal && PC >= 0x8000) {
@@ -289,33 +264,33 @@ Status runCycles(uint64_t cycles) {
                 //     numICacheStalls--;
                 // }
                 
-                // pipelineInfo.ifInst = simulator->simIF(PC);
-                // if (pipelineInfo.idInst.opcode == OP_BRANCH) {
-                //     pipelineInfo.ifInst.status = SPECULATIVE;
-                // }
+                pipelineInfo.ifInst = simulator->simIF(PC);
+                if (pipelineInfo.idInst.opcode == OP_BRANCH) {
+                    pipelineInfo.ifInst.status = SPECULATIVE;
+                }
 
                 
-                // // simulate ICache
+                // simulate ICache
         
-                // std::cout << "i cache search " << pipelineInfo.ifInst.PC << std::endl;
-                // bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
-                // // std::cout << "line263 "  << std::endl;
-                // if (!iHit) {
-                //     std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
-                //     numICacheStalls = iCache->config.missLatency;
-                //     // numICacheStalls = 5;
-                // } else if (reachedIllegal) {
-                //     reachedIllegal = false;
-                // } 
+                std::cout << "i cache search " << pipelineInfo.ifInst.PC << std::endl;
+                bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
+                // std::cout << "line263 "  << std::endl;
+                if (!iHit) {
+                    std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
+                    numICacheStalls = iCache->config.missLatency;
+                    // numICacheStalls = 5;
+                } else if (reachedIllegal) {
+                    reachedIllegal = false;
+                } 
 
-                // if (!pipelineInfo.idInst.isLegal) {
-                //     pipelineInfo.idInst = nop(SQUASHED);
-                //     reachedIllegal = true;
-                //     PC = 0x8000;
-                //     numICacheStalls = 0;
-                // } else if (numICacheStalls == 0) {
-                //     PC = PC + 4;
-                // }
+                if (!pipelineInfo.idInst.isLegal) {
+                    pipelineInfo.idInst = nop(SQUASHED);
+                    reachedIllegal = true;
+                    PC = 0x8000;
+                    numICacheStalls = 0;
+                } else if (numICacheStalls == 0) {
+                    PC = PC + 4;
+                }
             }
 
         }
