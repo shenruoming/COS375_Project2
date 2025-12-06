@@ -110,12 +110,6 @@ Status runCycles(uint64_t cycles) {
             reachedIllegal = true;
             PC = 0x8000;
         }
-
-        if (numICacheStalls > 0) {
-            pipelineInfo.ifInst = nop(BUBBLE);
-            numICacheStalls--;
-            // fix this logic
-        } 
         
         // applies to load-use with stalling
         // load-use for R-type (load first, then use as an input register)
@@ -243,7 +237,11 @@ Status runCycles(uint64_t cycles) {
             } else {
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
-                // where icache decrement was
+                if (numICacheStalls > 0 && !reachedIllegal) {
+                    pipelineInfo.idInst = nop(BUBBLE);
+                    numICacheStalls--;
+                    // fix this logic 
+                } 
 
                 if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
                     // std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
@@ -257,19 +255,18 @@ Status runCycles(uint64_t cycles) {
                     // after raising an illegal instruction exception, squash future instructions
                     if (reachedIllegal) {
                         pipelineInfo.ifInst = nop(SQUASHED);
-                        reachedIllegal = false;
                     }
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
 
-                // if (numICacheStalls > 0 && reachedIllegal && PC >= 0x8000) {
-                //     pipelineInfo.idInst = nop(BUBBLE);
-                //     std::cout << "last line should come here"  << PC << std::endl;
-                //     numICacheStalls--;
-                //     if (numICacheStalls == 0) {
-                //         reachedIllegal = false;
-                //     }
-                // }
+                if (numICacheStalls > 0 && reachedIllegal && PC >= 0x8000) {
+                    pipelineInfo.idInst = nop(BUBBLE);
+                    std::cout << "last line should come here"  << PC << std::endl;
+                    numICacheStalls--;
+                    if (numICacheStalls == 0) {
+                        reachedIllegal = false;
+                    }
+                }
 
                 // if (reachedIllegal && PC < 0x8000) {
                 //     PC = 0x8000;
@@ -291,12 +288,11 @@ Status runCycles(uint64_t cycles) {
                     std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
                     numICacheStalls = iCache->config.missLatency;
                     // numICacheStalls = 5;
-                }
-                // } else if (reachedIllegal) {
-                //     reachedIllegal = false;
-                // } 
+                } else if (reachedIllegal) {
+                    reachedIllegal = false;
+                } 
                 
-                if (numICacheStalls <= 0) {
+                if (!reachedIllegal) {
                     PC = PC + 4;
                 }
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
