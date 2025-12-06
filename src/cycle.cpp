@@ -235,7 +235,7 @@ Status runCycles(uint64_t cycles) {
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
             } else {
                 // exception handling for illegal instruction
-                if (reachedIllegal) {
+                if (reachedIllegal && !pipelineInfo.idInst.isNop) {
                     pipelineInfo.idInst = nop(SQUASHED);
                     // reachedIllegal = true;
                     // if (!changedExceptionControl) {
@@ -268,7 +268,7 @@ Status runCycles(uint64_t cycles) {
 
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                     // after raising an illegal instruction exception, squash future instructions
-                    if (reachedIllegal && !pipelineInfo.idInst.isHalt) {
+                    if (reachedIllegal && !pipelineInfo.idInst.isHalt && !pipelineInfo.idInst.isNop) {
                         pipelineInfo.idInst = nop(SQUASHED);
                     }
                 }
