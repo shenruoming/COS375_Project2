@@ -77,15 +77,15 @@ Status runCycles(uint64_t cycles) {
         pipelineInfo.wbInst = nop(BUBBLE);
 
         // simulate D-cache stalls
-        if (numDCacheStalls > 0) {
-            numDCacheStalls -= 1;
-            if (numICacheStalls > 0) {
-                numICacheStalls -= 1;
-            }
-            break;
-        } else if (numICacheStalls > 0) {
-            numICacheStalls -= 1;
-        }
+        // if (numDCacheStalls > 0) {
+        //     numDCacheStalls -= 1;
+        //     if (numICacheStalls > 0) {
+        //         numICacheStalls -= 1;
+        //     }
+        //     break;
+        // } else if (numICacheStalls > 0) {
+        //     numICacheStalls -= 1;
+        // }
 
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
         // forward to rs2 of load if needed: no stall for load-store (WB-> MEM)
