@@ -18,9 +18,12 @@ static uint64_t cycleCount = 0;
 static uint64_t PC = 0;
 
 static bool reachedIllegal = false;
-static bool firstIllegal = false;
+static bool reachedHalt = false;
 static int numDCacheStalls = 0;
 static int numICacheStalls = 0;
+static bool inBranch = false;
+static bool changedExceptionControl = false;
+static uint64_t correctBranchPC = 0;
 
 /**TODO: Implement pipeline simulation for the RISCV machine in this file.
  * A basic template is provided below that doesn't account for any hazards.
@@ -82,6 +85,8 @@ Status runCycles(uint64_t cycles) {
                 numICacheStalls -= 1;
             }
             break;
+        } else if (numICacheStalls > 0) {
+            numICacheStalls -= 1;
         }
 
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
@@ -99,18 +104,8 @@ Status runCycles(uint64_t cycles) {
             }
             bool hit = dCache->access(pipelineInfo.memInst.memAddress, op);
             if (!hit) {
-                std::cout << "d cache miss: "  << PC << std::endl;
                 numDCacheStalls = dCache->config.missLatency;
             }
-        }
-
-        // exception handling for illegal instruction 
-        // Sarah moved this here
-        if (!pipelineInfo.idInst.isLegal) {
-            pipelineInfo.idInst = nop(SQUASHED);
-            reachedIllegal = true;
-            firstIllegal = true;
-            PC = 0x8000;
         }
         
         // applies to load-use with stalling
@@ -146,6 +141,9 @@ Status runCycles(uint64_t cycles) {
             pipelineInfo.idInst = pipelineInfo.idInst;
             pipelineInfo.exInst = nop(BUBBLE);
         } else {
+            // delete maybe: "refresh" id instruction registers in case of long cache stalls
+            // pipelineInfo.idInst = simulator->simID(pipelineInfo.idInst); 
+
             // NOP in between load and store, 
             if (pipelineInfo.wbInst.opcode == OP_LOAD 
                 && pipelineInfo.idInst.opcode == OP_STORE 
@@ -237,80 +235,67 @@ Status runCycles(uint64_t cycles) {
                 // "refresh" the branch's next PC
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
             } else {
+                // exception handling for illegal instruction
+                if (reachedIllegal && !pipelineInfo.idInst.isNop && !pipelineInfo.idInst.isHalt) {
+                    pipelineInfo.idInst = nop(SQUASHED);
+                    // reachedIllegal = true;
+                    // if (!changedExceptionControl) {
+                    //     changedExceptionControl = true;
+                    //     numICacheStalls = 0;
+                    // }
+                }
+
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
-                if (numICacheStalls > 0 && !reachedIllegal) {
+                if (numICacheStalls > 0) {
                     pipelineInfo.idInst = nop(BUBBLE);
-                    numICacheStalls--;
                     break;
-                } 
+                }
 
-                if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
-                    // std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
-                    PC = pipelineInfo.idInst.nextPC;
+                if (inBranch) {
+                    simulator->simNextPCResolution(pipelineInfo.idInst);
+                    correctBranchPC = pipelineInfo.idInst.nextPC;
+                }
+                
+                if (inBranch && correctBranchPC != pipelineInfo.ifInst.PC) {
+                    std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
+                    PC = correctBranchPC;
                     pipelineInfo.idInst = nop(SQUASHED);
                 } else {
                     std::cout << "correct branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
                     if (!pipelineInfo.ifInst.isNop) {
                         pipelineInfo.ifInst.status = NORMAL;
                     }
-                    // after raising an illegal instruction exception, squash future instructions
-                    if (reachedIllegal) {
-                        pipelineInfo.ifInst = nop(SQUASHED);
-                    }
+
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
-                }
-
-                if (numICacheStalls > 0 && reachedIllegal && PC >= 0x8000) {
-                    if (!firstIllegal) {
-                        pipelineInfo.idInst = nop(BUBBLE);
+                    // after raising an illegal instruction exception, squash future instructions
+                    if (reachedIllegal && !pipelineInfo.idInst.isHalt && !pipelineInfo.idInst.isNop) {
+                        pipelineInfo.idInst = nop(SQUASHED);
                     }
-                    std::cout << "last line should come here"  << PC << std::endl;
-                    numICacheStalls--;
-                    if (numICacheStalls == 0) {
-                        reachedIllegal = false;
-                    }
-                    firstIllegal = false;
                 }
-
-                // if (reachedIllegal && PC < 0x8000) {
-                //     PC = 0x8000;
-                // }
-                
-
+                inBranch = false;
                 pipelineInfo.ifInst = simulator->simIF(PC);
                 if (pipelineInfo.idInst.opcode == OP_BRANCH) {
                     pipelineInfo.ifInst.status = SPECULATIVE;
+                    inBranch = true;
                 }
 
-                
                 // simulate ICache
-        
-                std::cout << "i cache search " << pipelineInfo.ifInst.PC << std::endl;
                 bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
-                // std::cout << "line263 "  << std::endl;
                 if (!iHit) {
-                    std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
-                    numICacheStalls = iCache->config.missLatency;
-                    // numICacheStalls = 5;
-                } else if (reachedIllegal) {
-                    reachedIllegal = false;
-                } 
-                
-                // this should probably be if we are currently in a stall or not
-                if (!reachedIllegal) {
-                    PC = PC + 4;
+                    numICacheStalls = iCache->config.missLatency + 1;
                 }
+                PC = PC + 4;
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
-                // if (reachedIllegal) {
-                //     if (PC >= 0x8000) {
-                //         status = HALT;
-                //     } else {
-                //         PC = 0x8000;
-                //     }
-                // } else {
-                //     PC = PC + 4;
-                // }
+                if (!pipelineInfo.idInst.isLegal) {
+                    PC = 0x8000;
+                    reachedIllegal = true;
+                    numICacheStalls = 0;
+                }
+                if (pipelineInfo.idInst.isHalt) {
+                    reachedIllegal = false;
+                    reachedHalt = true;
+                }
                 
             }
 
@@ -323,6 +308,9 @@ Status runCycles(uint64_t cycles) {
             status = HALT;
             break;
         }
+    }
+    if (pipelineInfo.wbInst.isHalt) {
+        status = HALT;
     }
 
     
@@ -343,9 +331,8 @@ Status runCycles(uint64_t cycles) {
 // run till halt (call runCycles() with cycles == 1 each time) until
 // status tells you to HALT or ERROR out
 Status runTillHalt() {
-    // std::cout << "is cache working "  << iCache->config.missLatency << std::endl;
-    // uint64_t addresses[6] = {0x0, 0x4, 0x8, 0x0000F0001,  0x000FF0001, 0x0};
-    // for (int i = 0; i < 6; i++) {
+    // uint64_t addresses[18] = {0x0, 0x4, 0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24,0x28,0x2c, 0x30, 0x34, 0x38, 0x0000F0001,  0x000FF0001, 0x0};
+    // for (int i = 0; i < 18; i++) {
     //     iCache->access(addresses[i], CACHE_READ);
     // }
     // return SUCCESS;
