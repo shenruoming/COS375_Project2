@@ -235,12 +235,6 @@ Status runCycles(uint64_t cycles) {
                 // "refresh" the branch's next PC
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
             } else {
-                if (!pipelineInfo.idInst.isLegal) {
-                    pipelineInfo.idInst = nop(SQUASHED);
-                    reachedIllegal = true;
-                    PC = 0x8000;
-                    break;
-                }
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
                 if (numICacheStalls > 0 && !reachedIllegal) {
@@ -295,7 +289,7 @@ Status runCycles(uint64_t cycles) {
                     numICacheStalls = iCache->config.missLatency;
                     // numICacheStalls = 5;
                 } else if (reachedIllegal) {
-                    reachedIllegal = false;
+                    reachedIllegal == false;
                 } 
                 
                 if (!reachedIllegal) {
