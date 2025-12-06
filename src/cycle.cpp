@@ -112,7 +112,7 @@ Status runCycles(uint64_t cycles) {
         }
 
         if (numICacheStalls > 0) {
-            pipelineInfo.idInst = nop(BUBBLE);
+            pipelineInfo.ifInst = nop(BUBBLE);
             numICacheStalls--;
             // fix this logic
         } 
@@ -255,9 +255,9 @@ Status runCycles(uint64_t cycles) {
                         pipelineInfo.ifInst.status = NORMAL;
                     }
                     // after raising an illegal instruction exception, squash future instructions
-                    if (reachedIllegal) {
-                        pipelineInfo.ifInst = nop(SQUASHED);
-                    }
+                    // if (reachedIllegal) {
+                    //     pipelineInfo.ifInst = nop(SQUASHED);
+                    // }
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
 
