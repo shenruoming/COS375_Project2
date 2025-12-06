@@ -21,7 +21,6 @@ static bool reachedIllegal = false;
 static int numDCacheStalls = 0;
 static int numICacheStalls = 0;
 static bool inBranch = false;
-static bool changedExceptionControl = false;
 static uint64_t correctBranchPC = 0;
 
 /**TODO: Implement pipeline simulation for the RISCV machine in this file.
@@ -172,27 +171,38 @@ Status runCycles(uint64_t cycles) {
 
             // MAKE SURE HERE THAT WB INSTR OR MEM INSTR ISNT A BRANCH 
             // checking if register we need for execute was just calculated add -> smth -> add
-            if (pipelineInfo.wbInst.opcode != OP_LOAD && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
+            if (pipelineInfo.wbInst.opcode != OP_LOAD 
+                && pipelineInfo.wbInst.opcode != OP_STORE
+                && pipelineInfo.wbInst.opcode != OP_BRANCH
+                && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
                 // std::cout << "forward from wb to ex for rs1: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.arithResult;
             }
-            if (pipelineInfo.wbInst.opcode != OP_LOAD && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
+            if (pipelineInfo.wbInst.opcode != OP_LOAD 
+                && pipelineInfo.wbInst.opcode != OP_STORE
+                && pipelineInfo.wbInst.opcode != OP_BRANCH
+                && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
                 // std::cout << "forward from wb to ex for rs2: "  << pipelineInfo.wbInst.arithResult << std::endl;
-                // std::cout << "should be here at t4 for t3: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.arithResult;
             }
             // R-type -> R-type, store, and load hopefully
             // checking if register we need for execute was just calculated add -> add
-            if (pipelineInfo.memInst.opcode != OP_LOAD && pipelineInfo.memInst.rd == pipelineInfo.idInst.rs1) {
+            if (pipelineInfo.memInst.opcode != OP_LOAD
+                && pipelineInfo.memInst.opcode != OP_STORE
+                && pipelineInfo.memInst.opcode != OP_BRANCH
+                && pipelineInfo.memInst.rd == pipelineInfo.idInst.rs1) {
                 // std::cout << "forward from mem to ex for rs1: "  << pipelineInfo.memInst.arithResult << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.memInst.arithResult;
             }
-            if (pipelineInfo.memInst.opcode != OP_LOAD && pipelineInfo.memInst.rd == pipelineInfo.idInst.rs2) {
+            if (pipelineInfo.memInst.opcode != OP_LOAD
+                && pipelineInfo.memInst.opcode != OP_STORE
+                && pipelineInfo.memInst.opcode != OP_BRANCH
+                && pipelineInfo.memInst.rd == pipelineInfo.idInst.rs2) {
                 // std::cout << "forward from mem to ex for rs2: "  << pipelineInfo.memInst.arithResult << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.memInst.arithResult;
             }
             // one cycle arith branch stal
-            if (pipelineInfo.idInst.opcode == OP_BRANCH 
+            if ((pipelineInfo.idInst.opcode == OP_BRANCH || pipelineInfo.idInst.opcode == OP_JALR)
                 && (pipelineInfo.exInst.opcode == OP_INT || pipelineInfo.exInst.opcode == OP_INTIMM 
                     || pipelineInfo.exInst.opcode == OP_INTIMMW || pipelineInfo.exInst.opcode == OP_INTW || pipelineInfo.exInst.opcode == OP_AUIPC)
                 && (pipelineInfo.idInst.rs1 == pipelineInfo.exInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.exInst.rd)) {
@@ -206,7 +216,7 @@ Status runCycles(uint64_t cycles) {
                 pipelineInfo.exInst = nop(BUBBLE);
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
             // two cycle load branch stall
-            } else if (pipelineInfo.idInst.opcode == OP_BRANCH 
+            } else if ((pipelineInfo.idInst.opcode == OP_BRANCH || pipelineInfo.idInst.opcode == OP_JALR) 
                 && (pipelineInfo.exInst.opcode == OP_LOAD)
                 && (pipelineInfo.idInst.rs1 == pipelineInfo.exInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.exInst.rd)) {
                 // should 
@@ -218,7 +228,7 @@ Status runCycles(uint64_t cycles) {
                 }
                 pipelineInfo.exInst = nop(BUBBLE);
                 // pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
-            } else if (pipelineInfo.idInst.opcode == OP_BRANCH 
+            } else if ((pipelineInfo.idInst.opcode == OP_BRANCH || pipelineInfo.idInst.opcode == OP_JALR) 
                 && (pipelineInfo.wbInst.opcode == OP_LOAD)
                 && (pipelineInfo.idInst.rs1 == pipelineInfo.wbInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.wbInst.rd)) {
 
@@ -237,11 +247,6 @@ Status runCycles(uint64_t cycles) {
                 // exception handling for illegal instruction
                 if (reachedIllegal && !pipelineInfo.idInst.isNop && !pipelineInfo.idInst.isHalt) {
                     pipelineInfo.idInst = nop(SQUASHED);
-                    // reachedIllegal = true;
-                    // if (!changedExceptionControl) {
-                    //     changedExceptionControl = true;
-                    //     numICacheStalls = 0;
-                    // }
                 }
 
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
