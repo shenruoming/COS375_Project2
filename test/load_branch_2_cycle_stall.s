@@ -7,5 +7,7 @@ addi t2, zero, 25
 
 branch:
     addi t1, zero, 8
+    addi t1, zero, 8
+    addi t1, zero, 8
 
 .word 0xfeedfeed

@@ -18,7 +18,6 @@ static uint64_t cycleCount = 0;
 static uint64_t PC = 0;
 
 static bool reachedIllegal = false;
-static bool reachedHalt = false;
 static int numDCacheStalls = 0;
 static int numICacheStalls = 0;
 static bool inBranch = false;
@@ -294,7 +293,6 @@ Status runCycles(uint64_t cycles) {
                 }
                 if (pipelineInfo.idInst.isHalt) {
                     reachedIllegal = false;
-                    reachedHalt = true;
                 }
                 
             }
