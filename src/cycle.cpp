@@ -20,6 +20,8 @@ static uint64_t PC = 0;
 static bool reachedIllegal = false;
 static int numDCacheStalls = 0;
 static int numICacheStalls = 0;
+static bool inBranch = false;
+static uint64_t correctBranchPC = 0;
 
 /**TODO: Implement pipeline simulation for the RISCV machine in this file.
  * A basic template is provided below that doesn't account for any hazards.
@@ -81,6 +83,8 @@ Status runCycles(uint64_t cycles) {
                 numICacheStalls -= 1;
             }
             break;
+        } else if (numICacheStalls > 0) {
+            numICacheStalls -= 1;
         }
 
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
@@ -135,6 +139,9 @@ Status runCycles(uint64_t cycles) {
             pipelineInfo.idInst = pipelineInfo.idInst;
             pipelineInfo.exInst = nop(BUBBLE);
         } else {
+            // delete maybe: "refresh" id instruction registers in case of long cache stalls
+            pipelineInfo.idInst = simulator->simID(pipelineInfo.idInst); 
+
             // NOP in between load and store, 
             if (pipelineInfo.wbInst.opcode == OP_LOAD 
                 && pipelineInfo.idInst.opcode == OP_STORE 
@@ -234,10 +241,15 @@ Status runCycles(uint64_t cycles) {
 
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
+                if (numICacheStalls > 0) {
+                    pipelineInfo.idInst = nop(BUBBLE);
+                    break;
+                }
+
                 
-                if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
+                if (inBranch && correctBranchPC != pipelineInfo.ifInst.PC) {
                     std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
-                    PC = pipelineInfo.idInst.nextPC;
+                    PC = correctBranchPC;
                     pipelineInfo.idInst = nop(SQUASHED);
                 } else {
                     std::cout << "correct branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
@@ -250,15 +262,18 @@ Status runCycles(uint64_t cycles) {
                     // }
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
+                inBranch = false;
                 pipelineInfo.ifInst = simulator->simIF(PC);
                 if (pipelineInfo.idInst.opcode == OP_BRANCH) {
                     pipelineInfo.ifInst.status = SPECULATIVE;
+                    inBranch = true;
+                    correctBranchPC = pipelineInfo.idInst.nextPC;
                 }
 
                 // simulate ICache
                 bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
                 if (!iHit) {
-                    numICacheStalls = iCache->config.missLatency;
+                    numICacheStalls = iCache->config.missLatency + 1;
                 }
                 PC = PC + 4;
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
@@ -303,17 +318,17 @@ Status runCycles(uint64_t cycles) {
 // run till halt (call runCycles() with cycles == 1 each time) until
 // status tells you to HALT or ERROR out
 Status runTillHalt() {
-    // uint64_t addresses[6] = {0x0, 0x4, 0x8, 0x0000F0001,  0x000FF0001, 0x0};
-    // for (int i = 0; i < 6; i++) {
-    //     iCache->access(addresses[i], CACHE_READ);
-    // }
-    // return SUCCESS;
-    Status status;
-    while (true) {
-        status = static_cast<Status>(runCycles(1));
-        if (status == HALT) break;
+    uint64_t addresses[6] = {0x0, 0x4, 0x8, 0x0000F0001,  0x000FF0001, 0x0};
+    for (int i = 0; i < 6; i++) {
+        iCache->access(addresses[i], CACHE_READ);
     }
-    return status;
+    return SUCCESS;
+    Status status;
+    // while (true) {
+    //     status = static_cast<Status>(runCycles(1));
+    //     if (status == HALT) break;
+    // }
+    // return status;
 }
 
 // dump the state of the simulator
