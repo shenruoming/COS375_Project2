@@ -251,10 +251,17 @@ Status runCycles(uint64_t cycles) {
                     break;
                 }
 
+                if (reachedIllegal) {
+                    PC = 0x8000;
+                    reachedIllegal = false;
+                    inBranch = false;
+                }
+
                 if (inBranch) {
                     simulator->simNextPCResolution(pipelineInfo.idInst);
                     correctBranchPC = pipelineInfo.idInst.nextPC;
                 }
+                
                 if (inBranch && correctBranchPC != pipelineInfo.ifInst.PC) {
                     std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
                     PC = correctBranchPC;
@@ -283,13 +290,14 @@ Status runCycles(uint64_t cycles) {
                 if (!iHit) {
                     numICacheStalls = iCache->config.missLatency + 1;
                 }
+                PC = PC + 4;
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
-                if (reachedIllegal) {
-                    PC = 0x8000;
-                    reachedIllegal = false;
-                } else {
-                    PC = PC + 4;
-                }
+                // if (reachedIllegal) {
+                //     PC = 0x8000;
+                //     reachedIllegal = false;
+                // } else {
+                //     PC = PC + 4;
+                // }
                 
             }
 
