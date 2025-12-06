@@ -304,6 +304,9 @@ Status runCycles(uint64_t cycles) {
             break;
         }
     }
+    if (pipelineInfo.wbInst.isHalt) {
+        status = HALT;
+    }
 
     
     pipeState.ifPC = pipelineInfo.ifInst.PC;
