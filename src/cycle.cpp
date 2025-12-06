@@ -101,7 +101,7 @@ Status runCycles(uint64_t cycles) {
             if (pipelineInfo.memInst.opcode == OP_STORE) {
                 op = CACHE_WRITE;
             }
-            bool hit = dCache->access(pipelineInfo.memInst.PC, op);
+            bool hit = dCache->access(pipelineInfo.memInst.memAddress, op);
             if (!hit) {
                 numDCacheStalls = dCache->config.missLatency;
             }
