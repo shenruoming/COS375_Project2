@@ -237,7 +237,11 @@ Status runCycles(uint64_t cycles) {
             } else {
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
-                
+                if (numICacheStalls > 0 && !reachedIllegal) {
+                    pipelineInfo.idInst = nop(BUBBLE);
+                    numICacheStalls--;
+                    break;
+                } 
 
                 if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
                     // std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
@@ -255,18 +259,14 @@ Status runCycles(uint64_t cycles) {
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                 }
 
-                if (numICacheStalls > 0) {
+                if (numICacheStalls > 0 && reachedIllegal && PC >= 0x8000) {
                     pipelineInfo.idInst = nop(BUBBLE);
+                    std::cout << "last line should come here"  << PC << std::endl;
                     numICacheStalls--;
-                } 
-                // if (numICacheStalls > 0 && reachedIllegal && PC >= 0x8000) {
-                //     pipelineInfo.idInst = nop(BUBBLE);
-                //     std::cout << "last line should come here"  << PC << std::endl;
-                //     numICacheStalls--;
-                //     if (numICacheStalls == 0) {
-                //         reachedIllegal = false;
-                //     }
-                // }
+                    if (numICacheStalls == 0) {
+                        reachedIllegal = false;
+                    }
+                }
 
                 // if (reachedIllegal && PC < 0x8000) {
                 //     PC = 0x8000;
