@@ -20,6 +20,8 @@ static uint64_t PC = 0;
 static bool reachedIllegal = false;
 static int numDCacheStalls = 0;
 static int numICacheStalls = 0;
+static int numDynamicInstructions = 0;
+static int numLoadStalls = 0;
 static bool inBranch = false;
 static uint64_t correctBranchPC = 0;
 
@@ -87,6 +89,11 @@ Status runCycles(uint64_t cycles) {
             numICacheStalls -= 1;
         }
 
+        // stats for number of dynamic instructions
+        if (!pipelineInfo.memInst.isNop) {
+            numDynamicInstructions += 1;
+        }
+
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
         // forward to rs2 of load if needed: no stall for load-store (WB-> MEM)
         if (pipelineInfo.wbInst.opcode == OP_LOAD && pipelineInfo.exInst.opcode == OP_STORE && pipelineInfo.wbInst.rd == pipelineInfo.exInst.rs2) {
@@ -132,12 +139,19 @@ Status runCycles(uint64_t cycles) {
             }
         
             pipelineInfo.exInst = nop(BUBBLE);
+
+            // update stats
+            numLoadStalls += 1;
+
         // load-use for store (rs1 is in conflict) if we are storing at a register we just loaded the value of.
         } else if (pipelineInfo.memInst.opcode == OP_LOAD && pipelineInfo.idInst.opcode == OP_STORE &&
             pipelineInfo.idInst.rs1 == pipelineInfo.memInst.rd) {
             pipelineInfo.ifInst = pipelineInfo.ifInst;
             pipelineInfo.idInst = pipelineInfo.idInst;
             pipelineInfo.exInst = nop(BUBBLE);
+
+            // update stats
+            numLoadStalls += 1;
         } else {
             // delete maybe: "refresh" id instruction registers in case of long cache stalls
             pipelineInfo.idInst = simulator->simID(pipelineInfo.idInst); 
@@ -243,6 +257,9 @@ Status runCycles(uint64_t cycles) {
                 pipelineInfo.exInst = nop(BUBBLE);
                 // "refresh" the branch's next PC
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
+
+                // update stats
+                numLoadStalls += 1;
             } else {
                 // exception handling for illegal instruction
                 if (reachedIllegal && !pipelineInfo.idInst.isNop && !pipelineInfo.idInst.isHalt) {
@@ -350,7 +367,7 @@ Status runTillHalt() {
 // dump the state of the simulator
 Status finalizeSimulator() {
     simulator->dumpRegMem(output);
-    SimulationStats stats{simulator->getDin(),  cycleCount, 0, 0, 0, 0, 0};  // TODO incomplete implementation
+    SimulationStats stats{simulator->getDin(),  cycleCount, iCache->getHits(), iCache->getMisses(), dCache->getHits(), dCache->getMisses(), numLoadStalls};  // TODO incomplete implementation
     dumpSimStats(stats, output);
     return SUCCESS;
 }
