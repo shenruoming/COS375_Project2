@@ -1,5 +1,6 @@
-addi a4, zero, 65536
-addi s6, zero, 8
+addi a4, zero, 30000
+addi s6, zero, 35536
+add a4, a4, s6
 addi a5, zero, 240
 addi s3, zero, 8
 sd s6, 0(a4)
