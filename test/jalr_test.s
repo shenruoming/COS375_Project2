@@ -5,7 +5,7 @@ addi s3, zero, 8
 sd s6, 0(a5)
 ld t5, 0(a5)
 ld s3, 0(a5)
-jalr t6, 28(s3)
+jalr t6, 36(s3)
 addi t2, zero, 25
 
 branch:
