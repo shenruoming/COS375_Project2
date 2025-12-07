@@ -418,6 +418,7 @@ Simulator::Instruction Simulator::simMemAccess(Instruction inst, MemoryStore *my
         memException = myMem->setMemValue(inst.memAddress, inst.op2Val, size);
     }
     if (memException == -EINVAL) {
+        std::cout << "mem exception found in simMemAccess: "  << inst.PC << std::endl;
         inst.memException = true;
     }
     return inst;

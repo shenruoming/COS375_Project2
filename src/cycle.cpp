@@ -91,6 +91,7 @@ Status runCycles(uint64_t cycles) {
 
         // squash instructions in cycle after mem exception
         if (pipelineInfo.memInst.memException) {
+            std::cout << "squashing instrs after mem exception: "  << PC << std::endl;
             pipelineInfo.memInst = nop(SQUASHED);
             pipelineInfo.exInst = nop(SQUASHED);
             pipelineInfo.idInst = nop(SQUASHED);
@@ -117,6 +118,7 @@ Status runCycles(uint64_t cycles) {
 
             // handle memory exceptions: jump to address 0x8000 after reaching first mem exception
             if (pipelineInfo.memInst.memException) {
+                std::cout << "caught mem exception at: "  << PC << std::endl;
                 PC = 0x8000;
                 reachedIllegal = true;
                 numDCacheStalls = 0;
