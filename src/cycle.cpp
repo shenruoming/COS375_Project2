@@ -306,7 +306,7 @@ Status runCycles(uint64_t cycles) {
                 }
                 inBranch = false;
                 pipelineInfo.ifInst = simulator->simIF(PC);
-                if (pipelineInfo.idInst.opcode == OP_BRANCH) {
+                if (pipelineInfo.idInst.opcode == OP_BRANCH || pipelineInfo.idInst.opcode == OP_JAL || pipelineInfo.idInst.opcode == OP_JALR) {
                     pipelineInfo.ifInst.status = SPECULATIVE;
                     inBranch = true;
                 }
