@@ -3,7 +3,7 @@ addi a5, zero, 240
 addi s3, zero, 8
 sd a4, 0(a5)
 ld t5, 0(a5)
-jalr t6, s3, branch # change to jal
+jalr t6, branch(s3)
 addi t2, zero, 25
 
 branch:
