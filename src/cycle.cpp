@@ -20,8 +20,8 @@ static uint64_t PC = 0;
 static bool reachedIllegal = false;
 static int numDCacheStalls = 0;
 static int numICacheStalls = 0;
-static int numDynamicInstructions = 0;
-static int numLoadStalls = 0;
+static uint64_t numDynamicInstructions = 0;
+static uint64_t numLoadStalls = 0;
 static bool inBranch = false;
 static uint64_t correctBranchPC = 0;
 
