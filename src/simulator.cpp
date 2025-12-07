@@ -404,10 +404,10 @@ Simulator::Instruction Simulator::simMemAccess(Instruction inst, MemoryStore *my
     MemEntrySize size = (inst.funct3 == FUNCT3_B || inst.funct3 == FUNCT3_BU) ? BYTE_SIZE :
                     (inst.funct3 == FUNCT3_H || inst.funct3 == FUNCT3_HU) ? HALF_SIZE :
                     (inst.funct3 == FUNCT3_W || inst.funct3 == FUNCT3_WU) ? WORD_SIZE : DOUBLE_SIZE;
-
+    int memException = 0;
     if (inst.readsMem) {
         uint64_t value;
-        myMem->getMemValue(inst.memAddress, value, size);
+        memException = myMem->getMemValue(inst.memAddress, value, size);
         
         if (inst.funct3 == FUNCT3_B || inst.funct3 == FUNCT3_H || inst.funct3 == FUNCT3_W) {
             inst.memResult = sext64(value, size * 8 - 1);
@@ -415,9 +415,11 @@ Simulator::Instruction Simulator::simMemAccess(Instruction inst, MemoryStore *my
             inst.memResult = value;
         }
     } else if (inst.writesMem) {
-        myMem->setMemValue(inst.memAddress, inst.op2Val, size);
+        memException = myMem->setMemValue(inst.memAddress, inst.op2Val, size);
     }
-
+    if (memException == -EINVAL) {
+        inst.memException = true;
+    }
     return inst;
 }
 

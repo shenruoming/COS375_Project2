@@ -89,9 +89,12 @@ Status runCycles(uint64_t cycles) {
             numICacheStalls -= 1;
         }
 
-        // stats for number of dynamic instructions
-        if (!pipelineInfo.memInst.isNop) {
-            numDynamicInstructions += 1;
+        // squash instructions in cycle after mem exception
+        if (pipelineInfo.memInst.memException) {
+            pipelineInfo.memInst = nop(SQUASHED);
+            pipelineInfo.exInst = nop(SQUASHED);
+            pipelineInfo.idInst = nop(SQUASHED);
+            pipelineInfo.ifInst = nop(SQUASHED);
         }
 
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
@@ -110,6 +113,13 @@ Status runCycles(uint64_t cycles) {
             bool hit = dCache->access(pipelineInfo.memInst.memAddress, op);
             if (!hit) {
                 numDCacheStalls = dCache->config.missLatency;
+            }
+
+            // handle memory exceptions: jump to address 0x8000 after reaching first mem exception
+            if (pipelineInfo.memInst.memException) {
+                PC = 0x8000;
+                reachedIllegal = true;
+                numDCacheStalls = 0;
             }
         }
         
@@ -321,7 +331,6 @@ Status runCycles(uint64_t cycles) {
 
         }
         
-        
         // later add goes into execute and stays there until value is available
         // WB Check for halt instruction
         if (pipelineInfo.wbInst.isHalt) {
@@ -332,7 +341,6 @@ Status runCycles(uint64_t cycles) {
     if (pipelineInfo.wbInst.isHalt) {
         status = HALT;
     }
-
     
     pipeState.ifPC = pipelineInfo.ifInst.PC;
     pipeState.ifStatus = pipelineInfo.ifInst.status;

@@ -2,7 +2,7 @@ addi a4, zero, 30
 addi a5, zero, 240
 sd a4, 0(a5)
 ld t5, 0(a5)
-beq t5, a4, branch # change to jal
+jal t6, branch # change to jal
 addi t2, zero, 25
 
 branch:
