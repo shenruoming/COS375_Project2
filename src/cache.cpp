@@ -24,6 +24,8 @@ Cache::Cache(CacheConfig configParam, CacheDataType cacheType) : config(configPa
     type = cacheType;
     numOffsetBits = log2(config.blockSize);
     numIndexBits = log2(numSets);
+    hits = 0;
+    misses = 0;
 }
 
 // Access method definition

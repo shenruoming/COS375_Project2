@@ -475,6 +475,7 @@ Simulator::Instruction Simulator::simWB(Simulator::Instruction inst) {
     if (inst.isHalt || !inst.isLegal) {
         return inst;
     }
+    din += 1;
     return simCommit(inst, regData);
 }
 
