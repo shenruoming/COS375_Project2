@@ -1,7 +1,7 @@
 addi a4, zero, 510
 addi a5, zero, 240
 addi s3, zero, 8
-sd s6, 0(a4)
+ld s6, 0(a4)
 ld t5, 0(a5)
 ld s3, 0(a5)
 jalr t6, 36(s3)
