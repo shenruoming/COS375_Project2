@@ -472,10 +472,12 @@ Simulator::Instruction Simulator::simMEM(Simulator::Instruction inst) {
 Simulator::Instruction Simulator::simWB(Simulator::Instruction inst) {
     // throw std::runtime_error("simWB not implemented yet"); // TODO implement WB
     // cout << "[Simulator] reached writeback: "  << inst.instruction << endl;
+    if (!inst.isNop) {
+        din += 1;
+    }
     if (inst.isHalt || !inst.isLegal) {
         return inst;
     }
-    din += 1;
     return simCommit(inst, regData);
 }
 
