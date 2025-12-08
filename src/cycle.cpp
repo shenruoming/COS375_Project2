@@ -118,11 +118,9 @@ Status runCycles(uint64_t cycles) {
                 numDCacheStalls = dCache->config.missLatency;
             }
 
-            // handle memory exceptions: jump to address 0x8000 after reaching first mem exception
+            // handle memory exceptions
             if (pipelineInfo.memInst.memException) {
                 std::cout << "caught mem exception at: "  << PC << std::endl;
-                // PC = 0x8000;
-                // reachedMemException = true;
                 numDCacheStalls = 0;
             }
         }
@@ -156,6 +154,7 @@ Status runCycles(uint64_t cycles) {
 
             // update stats
             numLoadStalls += 1;
+            std::cout << "another load use stall for r-type: " << pipelineInfo.memInst.PC << std::endl;
 
         // load-use for store (rs1 is in conflict) if we are storing at a register we just loaded the value of.
         } else if (pipelineInfo.memInst.opcode == OP_LOAD && pipelineInfo.idInst.opcode == OP_STORE &&
@@ -166,6 +165,7 @@ Status runCycles(uint64_t cycles) {
 
             // update stats
             numLoadStalls += 1;
+            std::cout << "another load use stall for load then store: " << pipelineInfo.memInst.PC << std::endl;
         } else {
             // delete maybe: "refresh" id instruction registers in case of long cache stalls
             pipelineInfo.idInst = simulator->simID(pipelineInfo.idInst); 
@@ -274,6 +274,7 @@ Status runCycles(uint64_t cycles) {
 
                 // update stats
                 numLoadStalls += 1;
+                std::cout << "another load branch stall (2 cycle): " << pipelineInfo.wbInst.PC << std::endl;
             } else {
                 // exception handling for illegal instruction
                 if (reachedIllegal && !pipelineInfo.idInst.isNop && !pipelineInfo.idInst.isHalt) {
