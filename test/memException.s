@@ -1,6 +1,5 @@
-addi a4, zero, 910
-addi a5, zero, 10
-mul a4, a4, a5
+addi a4, zero, 16
+slli a4, a4, 125
 addi a5, zero, 240
 addi s3, zero, 8
 ld s6, 0(a4)
