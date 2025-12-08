@@ -404,7 +404,7 @@ Simulator::Instruction Simulator::simMemAccess(Instruction inst, MemoryStore *my
     MemEntrySize size = (inst.funct3 == FUNCT3_B || inst.funct3 == FUNCT3_BU) ? BYTE_SIZE :
                     (inst.funct3 == FUNCT3_H || inst.funct3 == FUNCT3_HU) ? HALF_SIZE :
                     (inst.funct3 == FUNCT3_W || inst.funct3 == FUNCT3_WU) ? WORD_SIZE : DOUBLE_SIZE;
-    int memException = 0;
+    int memException = 1;
     if (inst.readsMem) {
         uint64_t value;
         memException = myMem->getMemValue(inst.memAddress, value, size);
