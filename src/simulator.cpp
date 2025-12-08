@@ -404,7 +404,7 @@ Simulator::Instruction Simulator::simMemAccess(Instruction inst, MemoryStore *my
     MemEntrySize size = (inst.funct3 == FUNCT3_B || inst.funct3 == FUNCT3_BU) ? BYTE_SIZE :
                     (inst.funct3 == FUNCT3_H || inst.funct3 == FUNCT3_HU) ? HALF_SIZE :
                     (inst.funct3 == FUNCT3_W || inst.funct3 == FUNCT3_WU) ? WORD_SIZE : DOUBLE_SIZE;
-    int memException = 1;
+    int memException = 0;
     if (inst.readsMem) {
         uint64_t value;
         memException = myMem->getMemValue(inst.memAddress, value, size);
@@ -418,7 +418,7 @@ Simulator::Instruction Simulator::simMemAccess(Instruction inst, MemoryStore *my
         memException = myMem->setMemValue(inst.memAddress, inst.op2Val, size);
     }
     std::cout << "mem exception val: "  << memException << std::endl;
-    if (memException == -EINVAL) {
+    if (memException != 0) {
         std::cout << "mem exception found in simMemAccess: "  << inst.PC << std::endl;
         inst.memException = true;
     }
