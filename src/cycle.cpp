@@ -20,7 +20,7 @@ static uint64_t PC = 0;
 static bool reachedIllegal = false;
 static int numDCacheStalls = 0;
 static int numICacheStalls = 0;
-static uint64_t numDynamicInstructions = 0;
+static bool reachedMemException = false;
 static uint64_t numLoadStalls = 0;
 static bool inBranch = false;
 static uint64_t correctBranchPC = 0;
@@ -96,6 +96,8 @@ Status runCycles(uint64_t cycles) {
             pipelineInfo.exInst = nop(SQUASHED);
             pipelineInfo.idInst = nop(SQUASHED);
             pipelineInfo.ifInst = nop(SQUASHED);
+            reachedMemException = true;
+            PC = 0x8000;
         }
 
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
@@ -119,8 +121,8 @@ Status runCycles(uint64_t cycles) {
             // handle memory exceptions: jump to address 0x8000 after reaching first mem exception
             if (pipelineInfo.memInst.memException) {
                 std::cout << "caught mem exception at: "  << PC << std::endl;
-                PC = 0x8000;
-                reachedIllegal = true;
+                // PC = 0x8000;
+                // reachedMemException = true;
                 numDCacheStalls = 0;
             }
         }
@@ -290,11 +292,11 @@ Status runCycles(uint64_t cycles) {
                     correctBranchPC = pipelineInfo.idInst.nextPC;
                 }
                 
-                if (inBranch && correctBranchPC != pipelineInfo.ifInst.PC) {
+                if (!reachedMemException && inBranch && correctBranchPC != pipelineInfo.ifInst.PC) {
                     std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
                     PC = correctBranchPC;
                     pipelineInfo.idInst = nop(SQUASHED);
-                } else {
+                } else if (!reachedMemException) {
                     std::cout << "correct branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
                     if (!pipelineInfo.ifInst.isNop) {
                         pipelineInfo.ifInst.status = NORMAL;
@@ -303,6 +305,12 @@ Status runCycles(uint64_t cycles) {
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                     // after raising an illegal instruction exception, squash future instructions
                     if (reachedIllegal && !pipelineInfo.idInst.isHalt && !pipelineInfo.idInst.isNop) {
+                        pipelineInfo.idInst = nop(SQUASHED);
+                    }
+                } else {
+                    pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
+                    // after raising an illegal instruction exception, squash future instructions
+                    if (!pipelineInfo.idInst.isHalt && !pipelineInfo.idInst.isNop) {
                         pipelineInfo.idInst = nop(SQUASHED);
                     }
                 }
