@@ -307,12 +307,13 @@ Status runCycles(uint64_t cycles) {
                     if (reachedIllegal && !pipelineInfo.idInst.isHalt && !pipelineInfo.idInst.isNop) {
                         pipelineInfo.idInst = nop(SQUASHED);
                     }
+                // mem exception
                 } else {
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
                     // after raising an illegal instruction exception, squash future instructions
-                    if (!pipelineInfo.idInst.isHalt && !pipelineInfo.idInst.isNop) {
-                        pipelineInfo.idInst = nop(SQUASHED);
-                    }
+                    // if (!pipelineInfo.idInst.isHalt && !pipelineInfo.idInst.isNop) {
+                    //     pipelineInfo.idInst = nop(SQUASHED);
+                    // }
                 }
                 inBranch = false;
                 pipelineInfo.ifInst = simulator->simIF(PC);
@@ -335,6 +336,7 @@ Status runCycles(uint64_t cycles) {
                 }
                 if (pipelineInfo.idInst.isHalt) {
                     reachedIllegal = false;
+                    reachedMemException = false;
                 }
                 
             }
