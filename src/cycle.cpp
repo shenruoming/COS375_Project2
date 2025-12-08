@@ -20,6 +20,10 @@ static uint64_t PC = 0;
 static bool reachedIllegal = false;
 static int numDCacheStalls = 0;
 static int numICacheStalls = 0;
+static bool reachedMemException = false;
+static uint64_t numLoadStalls = 0;
+static bool inBranch = false;
+static uint64_t correctBranchPC = 0;
 
 /**TODO: Implement pipeline simulation for the RISCV machine in this file.
  * A basic template is provided below that doesn't account for any hazards.
@@ -81,6 +85,19 @@ Status runCycles(uint64_t cycles) {
                 numICacheStalls -= 1;
             }
             break;
+        } else if (numICacheStalls > 0) {
+            numICacheStalls -= 1;
+        }
+
+        // squash instructions in cycle after mem exception
+        if (pipelineInfo.memInst.memException) {
+            std::cout << "squashing instrs after mem exception: "  << PC << std::endl;
+            pipelineInfo.memInst = nop(SQUASHED);
+            pipelineInfo.exInst = nop(SQUASHED);
+            pipelineInfo.idInst = nop(SQUASHED);
+            pipelineInfo.ifInst = nop(SQUASHED);
+            reachedMemException = true;
+            PC = 0x8000;
         }
 
         pipelineInfo.wbInst = simulator->simWB(pipelineInfo.memInst);
@@ -101,19 +118,17 @@ Status runCycles(uint64_t cycles) {
                 std::cout << "d cache miss: "  << PC << std::endl;
                 numDCacheStalls = dCache->config.missLatency;
             }
-        }
 
-        // exception handling for illegal instruction 
-        // Sarah moved this here
-        // if (!pipelineInfo.idInst.isLegal) {
-        //     pipelineInfo.idInst = nop(SQUASHED);
-        //     reachedIllegal = true;
-        //     PC = 0x8000;
-        // }
+            // handle memory exceptions
+            if (pipelineInfo.memInst.memException) {
+                std::cout << "caught mem exception at: "  << PC << std::endl;
+                numDCacheStalls = 0;
+            }
+        }
         
         // applies to load-use with stalling
         // load-use for R-type (load first, then use as an input register)
-        if (pipelineInfo.memInst.opcode == OP_LOAD && (pipelineInfo.idInst.opcode != OP_STORE) && pipelineInfo.idInst.opcode != OP_BRANCH &&
+        if (pipelineInfo.memInst.opcode == OP_LOAD && (pipelineInfo.idInst.opcode != OP_STORE) && pipelineInfo.idInst.opcode != OP_BRANCH && pipelineInfo.idInst.opcode != OP_JALR &&
             (pipelineInfo.idInst.rs1 == pipelineInfo.memInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.memInst.rd)) {
             pipelineInfo.ifInst = pipelineInfo.ifInst;
             pipelineInfo.idInst = pipelineInfo.idInst;
@@ -137,13 +152,25 @@ Status runCycles(uint64_t cycles) {
             }
         
             pipelineInfo.exInst = nop(BUBBLE);
+
+            // update stats
+            numLoadStalls += 1;
+            std::cout << "another load use stall for r-type: " << pipelineInfo.memInst.PC << std::endl;
+
         // load-use for store (rs1 is in conflict) if we are storing at a register we just loaded the value of.
         } else if (pipelineInfo.memInst.opcode == OP_LOAD && pipelineInfo.idInst.opcode == OP_STORE &&
             pipelineInfo.idInst.rs1 == pipelineInfo.memInst.rd) {
             pipelineInfo.ifInst = pipelineInfo.ifInst;
             pipelineInfo.idInst = pipelineInfo.idInst;
             pipelineInfo.exInst = nop(BUBBLE);
+
+            // update stats
+            numLoadStalls += 1;
+            std::cout << "another load use stall for load then store: " << pipelineInfo.memInst.PC << std::endl;
         } else {
+            // delete maybe: "refresh" id instruction registers in case of long cache stalls
+            pipelineInfo.idInst = simulator->simID(pipelineInfo.idInst); 
+
             // NOP in between load and store, 
             if (pipelineInfo.wbInst.opcode == OP_LOAD 
                 && pipelineInfo.idInst.opcode == OP_STORE 
@@ -173,27 +200,38 @@ Status runCycles(uint64_t cycles) {
 
             // MAKE SURE HERE THAT WB INSTR OR MEM INSTR ISNT A BRANCH 
             // checking if register we need for execute was just calculated add -> smth -> add
-            if (pipelineInfo.wbInst.opcode != OP_LOAD && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
+            if (pipelineInfo.wbInst.opcode != OP_LOAD 
+                && pipelineInfo.wbInst.opcode != OP_STORE
+                && pipelineInfo.wbInst.opcode != OP_BRANCH
+                && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs1) {
                 // std::cout << "forward from wb to ex for rs1: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.wbInst.arithResult;
             }
-            if (pipelineInfo.wbInst.opcode != OP_LOAD && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
+            if (pipelineInfo.wbInst.opcode != OP_LOAD 
+                && pipelineInfo.wbInst.opcode != OP_STORE
+                && pipelineInfo.wbInst.opcode != OP_BRANCH
+                && pipelineInfo.wbInst.rd == pipelineInfo.idInst.rs2) {
                 // std::cout << "forward from wb to ex for rs2: "  << pipelineInfo.wbInst.arithResult << std::endl;
-                // std::cout << "should be here at t4 for t3: "  << pipelineInfo.wbInst.arithResult << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.wbInst.arithResult;
             }
             // R-type -> R-type, store, and load hopefully
             // checking if register we need for execute was just calculated add -> add
-            if (pipelineInfo.memInst.opcode != OP_LOAD && pipelineInfo.memInst.rd == pipelineInfo.idInst.rs1) {
+            if (pipelineInfo.memInst.opcode != OP_LOAD
+                && pipelineInfo.memInst.opcode != OP_STORE
+                && pipelineInfo.memInst.opcode != OP_BRANCH
+                && pipelineInfo.memInst.rd == pipelineInfo.idInst.rs1) {
                 // std::cout << "forward from mem to ex for rs1: "  << pipelineInfo.memInst.arithResult << std::endl;
                 pipelineInfo.idInst.op1Val = pipelineInfo.memInst.arithResult;
             }
-            if (pipelineInfo.memInst.opcode != OP_LOAD && pipelineInfo.memInst.rd == pipelineInfo.idInst.rs2) {
+            if (pipelineInfo.memInst.opcode != OP_LOAD
+                && pipelineInfo.memInst.opcode != OP_STORE
+                && pipelineInfo.memInst.opcode != OP_BRANCH
+                && pipelineInfo.memInst.rd == pipelineInfo.idInst.rs2) {
                 // std::cout << "forward from mem to ex for rs2: "  << pipelineInfo.memInst.arithResult << std::endl;
                 pipelineInfo.idInst.op2Val = pipelineInfo.memInst.arithResult;
             }
             // one cycle arith branch stal
-            if (pipelineInfo.idInst.opcode == OP_BRANCH 
+            if ((pipelineInfo.idInst.opcode == OP_BRANCH || pipelineInfo.idInst.opcode == OP_JALR)
                 && (pipelineInfo.exInst.opcode == OP_INT || pipelineInfo.exInst.opcode == OP_INTIMM 
                     || pipelineInfo.exInst.opcode == OP_INTIMMW || pipelineInfo.exInst.opcode == OP_INTW || pipelineInfo.exInst.opcode == OP_AUIPC)
                 && (pipelineInfo.idInst.rs1 == pipelineInfo.exInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.exInst.rd)) {
@@ -207,7 +245,7 @@ Status runCycles(uint64_t cycles) {
                 pipelineInfo.exInst = nop(BUBBLE);
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
             // two cycle load branch stall
-            } else if (pipelineInfo.idInst.opcode == OP_BRANCH 
+            } else if ((pipelineInfo.idInst.opcode == OP_BRANCH || pipelineInfo.idInst.opcode == OP_JALR) 
                 && (pipelineInfo.exInst.opcode == OP_LOAD)
                 && (pipelineInfo.idInst.rs1 == pipelineInfo.exInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.exInst.rd)) {
                 // should 
@@ -219,7 +257,7 @@ Status runCycles(uint64_t cycles) {
                 }
                 pipelineInfo.exInst = nop(BUBBLE);
                 // pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
-            } else if (pipelineInfo.idInst.opcode == OP_BRANCH 
+            } else if ((pipelineInfo.idInst.opcode == OP_BRANCH || pipelineInfo.idInst.opcode == OP_JALR) 
                 && (pipelineInfo.wbInst.opcode == OP_LOAD)
                 && (pipelineInfo.idInst.rs1 == pipelineInfo.wbInst.rd || pipelineInfo.idInst.rs2 == pipelineInfo.wbInst.rd)) {
 
@@ -234,53 +272,56 @@ Status runCycles(uint64_t cycles) {
                 pipelineInfo.exInst = nop(BUBBLE);
                 // "refresh" the branch's next PC
                 pipelineInfo.idInst = simulator->simNextPCResolution(pipelineInfo.idInst);
+
+                // update stats
+                numLoadStalls += 1;
+                std::cout << "another load branch stall (2 cycle): " << pipelineInfo.wbInst.PC << std::endl;
             } else {
-                if (!pipelineInfo.idInst.isLegal) {
+                // exception handling for illegal instruction
+                if (reachedIllegal && !pipelineInfo.idInst.isNop && !pipelineInfo.idInst.isHalt) {
                     pipelineInfo.idInst = nop(SQUASHED);
-                    reachedIllegal = true;
-                    PC = 0x8000;
                 }
+
                 pipelineInfo.exInst = simulator->simEX(pipelineInfo.idInst);
 
-                if (numICacheStalls > 0 && !reachedIllegal) {
+                if (numICacheStalls > 0) {
                     pipelineInfo.idInst = nop(BUBBLE);
-                    numICacheStalls--;
                     break;
-                } 
+                }
 
-                if (!pipelineInfo.idInst.isNop && pipelineInfo.idInst.nextPC != pipelineInfo.ifInst.PC) {
-                    // std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
-                    PC = pipelineInfo.idInst.nextPC;
+                if (inBranch) {
+                    simulator->simNextPCResolution(pipelineInfo.idInst);
+                    correctBranchPC = pipelineInfo.idInst.nextPC;
+                }
+                
+                if (!reachedMemException && inBranch && correctBranchPC != pipelineInfo.ifInst.PC) {
+                    std::cout << "wrong branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
+                    PC = correctBranchPC;
                     pipelineInfo.idInst = nop(SQUASHED);
-                } else {
+                } else if (!reachedMemException) {
                     std::cout << "correct branch prediction, new PC is: "  << pipelineInfo.idInst.nextPC << std::endl;
                     if (!pipelineInfo.ifInst.isNop) {
                         pipelineInfo.ifInst.status = NORMAL;
                     }
-                    // after raising an illegal instruction exception, squash future instructions
-                    if (reachedIllegal) {
-                        pipelineInfo.ifInst = nop(SQUASHED);
-                    }
+
                     pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
-                }
-
-                if (numICacheStalls > 0 && reachedIllegal && PC >= 0x8000) {
-                    pipelineInfo.idInst = nop(BUBBLE);
-                    std::cout << "last line should come here"  << PC << std::endl;
-                    numICacheStalls--;
-                    if (numICacheStalls == 0) {
-                        reachedIllegal = false;
+                    // after raising an illegal instruction exception, squash future instructions
+                    if (reachedIllegal && !pipelineInfo.idInst.isHalt && !pipelineInfo.idInst.isNop) {
+                        pipelineInfo.idInst = nop(SQUASHED);
                     }
+                // mem exception
+                } else {
+                    pipelineInfo.idInst = simulator->simID(pipelineInfo.ifInst);
+                    // after raising an illegal instruction exception, squash future instructions
+                    // if (!pipelineInfo.idInst.isHalt && !pipelineInfo.idInst.isNop) {
+                    //     pipelineInfo.idInst = nop(SQUASHED);
+                    // }
                 }
-
-                // if (reachedIllegal && PC < 0x8000) {
-                //     PC = 0x8000;
-                // }
-                
-
+                inBranch = false;
                 pipelineInfo.ifInst = simulator->simIF(PC);
-                if (pipelineInfo.idInst.opcode == OP_BRANCH) {
+                if (pipelineInfo.idInst.opcode == OP_BRANCH || pipelineInfo.idInst.opcode == OP_JAL || pipelineInfo.idInst.opcode == OP_JALR) {
                     pipelineInfo.ifInst.status = SPECULATIVE;
+                    inBranch = true;
                 }
 
                 
@@ -290,31 +331,23 @@ Status runCycles(uint64_t cycles) {
                 bool iHit = iCache->access(pipelineInfo.ifInst.PC, CACHE_READ);
                 // std::cout << "line263 "  << std::endl;
                 if (!iHit) {
-                    std::cout << "wrong i cache: "  << pipelineInfo.ifInst.PC << std::endl;
-                    numICacheStalls = iCache->config.missLatency;
-                    // numICacheStalls = 5;
-                } else if (reachedIllegal) {
-                    reachedIllegal = false;
-                } 
-                
-                if (!reachedIllegal) {
-                    PC = PC + 4;
+                    numICacheStalls = iCache->config.missLatency + 1;
                 }
+                PC = PC + 4;
                 // exception handling: jump to address 0x8000 after reaching first illegal instruction
-                // if (reachedIllegal) {
-                //     if (PC >= 0x8000) {
-                //         status = HALT;
-                //     } else {
-                //         PC = 0x8000;
-                //     }
-                // } else {
-                //     PC = PC + 4;
-                // }
+                if (!pipelineInfo.idInst.isLegal) {
+                    PC = 0x8000;
+                    reachedIllegal = true;
+                    numICacheStalls = 0;
+                }
+                if (pipelineInfo.idInst.isHalt) {
+                    reachedIllegal = false;
+                    reachedMemException = false;
+                }
                 
             }
 
         }
-        
         
         // later add goes into execute and stays there until value is available
         // WB Check for halt instruction
@@ -323,7 +356,9 @@ Status runCycles(uint64_t cycles) {
             break;
         }
     }
-
+    if (pipelineInfo.wbInst.isHalt) {
+        status = HALT;
+    }
     
     pipeState.ifPC = pipelineInfo.ifInst.PC;
     pipeState.ifStatus = pipelineInfo.ifInst.status;
@@ -342,9 +377,8 @@ Status runCycles(uint64_t cycles) {
 // run till halt (call runCycles() with cycles == 1 each time) until
 // status tells you to HALT or ERROR out
 Status runTillHalt() {
-    // std::cout << "is cache working "  << iCache->config.missLatency << std::endl;
-    // uint64_t addresses[6] = {0x0, 0x4, 0x8, 0x0000F0001,  0x000FF0001, 0x0};
-    // for (int i = 0; i < 6; i++) {
+    // uint64_t addresses[18] = {0x0, 0x4, 0x8, 0xc, 0x10, 0x14, 0x18, 0x1c, 0x20, 0x24,0x28,0x2c, 0x30, 0x34, 0x38, 0x0000F0001,  0x000FF0001, 0x0};
+    // for (int i = 0; i < 18; i++) {
     //     iCache->access(addresses[i], CACHE_READ);
     // }
     // return SUCCESS;
@@ -359,7 +393,7 @@ Status runTillHalt() {
 // dump the state of the simulator
 Status finalizeSimulator() {
     simulator->dumpRegMem(output);
-    SimulationStats stats{simulator->getDin(),  cycleCount, 0, 0, 0, 0, 0};  // TODO incomplete implementation
+    SimulationStats stats{simulator->getDin(),  cycleCount, iCache->getHits(), iCache->getMisses(), dCache->getHits(), dCache->getMisses(), numLoadStalls};  // TODO incomplete implementation
     dumpSimStats(stats, output);
     return SUCCESS;
 }

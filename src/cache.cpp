@@ -22,16 +22,16 @@ Cache::Cache(CacheConfig configParam, CacheDataType cacheType) : config(configPa
     // For instance, if you had cache tables or other structures, initialize them here
     uint64_t numSets = config.cacheSize / config.blockSize / config.ways; 
     type = cacheType;
-    numOffsetBits = log2(config.blockSize); //4
-    numIndexBits = log2(numSets); //6
-
+    numOffsetBits = log2(config.blockSize);
+    numIndexBits = log2(numSets);
+    hits = 0;
+    misses = 0;
 }
 
 // Access method definition
 bool Cache::access(uint64_t address, CacheOperation readWrite) {
     uint64_t index = getIndex(address);
-    cout << "address: "  << address << endl;
-    cout << "index: "  << index << endl;
+    // cout << "index: "  << index << endl;
     uint64_t tag = getTag(address);
     auto cacheSet = cacheTable.find(index);
     cout << "getTag: "  << tag << endl;
@@ -44,9 +44,7 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
     }
     cout << "line 44 in cache.cpp " << endl;
     auto set = cacheSet->second;
-    cout << "line 46 in cache.cpp " << endl;
     auto element = std::find(set.begin(), set.end(), tag);
-    cout << "line 53 " << endl;
     if (element == set.end()) {
         misses += 1;
         if (set.size() < config.ways) {
@@ -58,13 +56,11 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
         } 
         cacheTable[index] = set;
         cout << "miss: "  << address << endl;
+        cacheTable[index] = set;
         return false;
     } else {
-        cout << "line line 61 in cache.cpp " << endl;
         set.remove(tag);
-        cout << "line line 63 in cache.cpp " << endl;
         set.push_back(tag);
-        cout << "line line 65 in cache.cpp " << endl;
         hits += 1;
         cout << "hit: "  << address << endl;
         cacheTable[index] = set;
