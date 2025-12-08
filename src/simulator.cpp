@@ -417,9 +417,8 @@ Simulator::Instruction Simulator::simMemAccess(Instruction inst, MemoryStore *my
     } else if (inst.writesMem) {
         memException = myMem->setMemValue(inst.memAddress, inst.op2Val, size);
     }
-    std::cout << "mem exception val: "  << memException << std::endl;
     if (memException != 0) {
-        std::cout << "mem exception found in simMemAccess: "  << inst.PC << std::endl;
+        // std::cout << "mem exception found in simMemAccess: "  << inst.PC << std::endl;
         inst.memException = true;
     }
     return inst;
