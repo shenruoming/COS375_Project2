@@ -56,7 +56,6 @@ int prepareMemory(MemoryStore *mem) {
 
 int MemoryStore::getOrSetValue(bool get, uint64_t address, uint64_t &value, MemEntrySize size) {
     uint64_t byteSize = static_cast<uint64_t>(size);
-
     switch (size) {
         case BYTE_SIZE:
         case HALF_SIZE:
