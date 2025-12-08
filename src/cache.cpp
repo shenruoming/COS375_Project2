@@ -52,12 +52,12 @@ bool Cache::access(uint64_t address, CacheOperation readWrite) {
         if (set.size() < config.ways) {
             set.push_back(tag);
         } else {
-            // cout << "cache set is full, removing: "  << set.front() << endl;
+            cout << "cache set is full, removing: "  << set.front() << endl;
             set.pop_front();
             set.push_back(tag);
         } 
         cacheTable[index] = set;
-        // cout << "miss: "  << address << endl;
+        cout << "miss: "  << address << endl;
         return false;
     } else {
         // cout << "line line 61 in cache.cpp " << endl;
